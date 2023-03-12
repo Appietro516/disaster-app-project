@@ -1,18 +1,8 @@
-# OpenLayers + Vite
+# OpenLayers + D3
 
-This example demonstrates how the `ol` package can be used with [Vite](https://vitejs.dev/).
+To run for dev:
+1. install nodejs/npm if not already installed https://github.com/nodesource/distributions
+2. git clone git@github.com:Appietro516/disaster-app-project.git
+3. npm i
+4. npm start
 
-To get started, run the following (requires Node 14+):
-
-    npx create-ol-app my-app --template vite
-
-Then change into your new `my-app` directory and start a development server (available at http://localhost:5173):
-
-    cd my-app
-    npm start
-
-To generate a build ready for production:
-
-    npm run build
-
-Then deploy the contents of the `dist` directory to your server.  You can also run `npm run serve` to serve the results of the `dist` directory for preview.
