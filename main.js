@@ -72,21 +72,52 @@ import OSM from 'ol/source/OSM';
 //   }
 // }
 
+// https://openlayers.org/en/latest/examples/side-by-side.html
 
+const view = new View({
+  center: [0, 0],
+  zoom: 2
+})
 
-const map = new Map({
-  target: 'map',
-  layers: [
-    new TileLayer({
-      source: new OSM()
-    })
-  ],
-  view: new View({
-    center: [0, 0],
-    zoom: 2
-  })
+const layer = new TileLayer({source: new OSM()})
+
+// const map = new Map({
+//   target: 'map1',
+//   layers: [
+//     new TileLayer({
+//       source: new OSM()
+//     })
+//   ],
+//   view: new View({
+//     center: [0, 0],
+//     zoom: 2
+//   })
+// });
+
+const map1 = new Map({
+  target: 'map1',
+  layers: [new TileLayer({source: new OSM()})],
+  view: view,
 });
 
+const map2 = new Map({
+  target: 'map2',
+  layers: [new TileLayer({source: new OSM()})],
+  view: view,
+});
+
+const map3 = new Map({
+  target: 'map3',
+  layers: [new TileLayer({source: new OSM()})],
+  view: view,
+});
+
+// Open question: how do we switch off of map views for graph/line charts?
+const map4 = new Map({
+  target: 'map4',
+  layers: [new TileLayer({source: new OSM()})],
+  view: view,
+});
 
 /**
  * TODO: Load the jsn data
