@@ -96,7 +96,10 @@ const layer = new TileLayer({source: new OSM()})
 //   })
 // });
 
-console.log(csv)
+console.log(csv[6].Year)
+console.log(csv[6].Latitude)
+//let header = csv[6].split(',');
+
 
 const map1 = new Map({
   target: 'map1',
