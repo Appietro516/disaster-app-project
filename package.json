@@ -7,9 +7,11 @@
     "serve": "vite preview"
   },
   "devDependencies": {
+    "@rollup/plugin-dsv": "^3.0.2",
     "vite": "^4.1.4"
   },
   "dependencies": {
+    "@vitejs/plugin-vue": "^4.1.0",
     "ol": "latest"
   }
 }

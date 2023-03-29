@@ -2,6 +2,8 @@ import './style.css';
 import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
+import csv from './emdat_earthquake.csv'
+
 
 // For D3 integration
 // https://openlayers.org/en/latest/examples/d3.html
@@ -94,6 +96,11 @@ const layer = new TileLayer({source: new OSM()})
 //   })
 // });
 
+console.log(csv[6].Year)
+console.log(csv[6].Latitude)
+//let header = csv[6].split(',');
+
+
 const map1 = new Map({
   target: 'map1',
   layers: [new TileLayer({source: new OSM()})],
@@ -118,6 +125,8 @@ const map4 = new Map({
   layers: [new TileLayer({source: new OSM()})],
   view: view,
 });
+
+
 
 /**
  * TODO: Load the jsn data
