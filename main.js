@@ -11,7 +11,7 @@ import MultiPoint from 'ol/geom/MultiPoint.js'
 import GeoJSON from 'ol/format/GeoJSON'
 import {Circle, GeometryCollection, Point, Polygon} from 'ol/geom.js';
 import {OSM, Vector as VectorSource} from 'ol/source.js';
-
+import {fromLonLat, toLonLat, get} from 'ol/proj.js';
 import {
   Circle as CircleStyle,
   Fill,
@@ -152,28 +152,28 @@ const styles = [
    *    returned as `MultiPoint` geometry, which will be used to render
    *    the style.
    */
-  new Style({
-    stroke: new Stroke({
-      color: 'blue',
-      width: 3,
-    }),
-    fill: new Fill({
-      color: 'rgba(0, 0, 255, 0.1)',
-    }),
-  }),
-  new Style({
-    image: new CircleStyle({
-      radius: 5,
-      fill: new Fill({
-        color: 'orange',
-      }),
-    }),
-    geometry: function (feature) {
-      // return the coordinates of the first ring of the polygon
-      const coordinates = feature.getGeometry().getCoordinates()[0];
-      return new MultiPoint(coordinates);
-    },
-  }),
+  // new Style({
+  //   stroke: new Stroke({
+  //     color: 'blue',
+  //     width: 3,
+  //   }),
+  //   fill: new Fill({
+  //     color: 'rgba(255, 0, 0, 0.1)',
+  //   }),
+  // }),
+  // new Style({
+  //   image: new CircleStyle({
+  //     radius: 5,
+  //     fill: new Fill({
+  //       color: 'orange',
+  //     }),
+  //   }),
+  //   geometry: function (feature) {
+  //     // return the coordinates of the first ring of the polygon
+  //     const coordinates = feature.getGeometry().getCoordinates()[0];
+  //     return new MultiPoint(coordinates);
+  //   },
+  // }),
 ];
 
 
@@ -199,107 +199,37 @@ const layer = new TileLayer({source: new OSM()})
 //   })
 // });
 
-console.log(csv[6].Year)
-console.log(csv[6].Latitude)
-//let header = csv[6].split(',');
+console.log(csv[5].Year)
+console.log(csv[5].Latitude)
 
-const geojsonObject = {
-  'type': 'FeatureCollection',
-  'crs': {
-    'type': 'name',
-    'properties': {
-      'name': 'EPSG:3857',
-    },
-  },
-  'features': [
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [-5e6, 6e6],
-            [-5e6, 8e6],
-            [-3e6, 8e6],
-            [-3e6, 6e6],
-            [-5e6, 6e6],
-          ],
-        ],
-      },
-    },
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [-2e6, 6e6],
-            [-2e6, 8e6],
-            [0, 8e6],
-            [0, 6e6],
-            [-2e6, 6e6],
-          ],
-        ],
-      },
-    },
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [1e6, 6e6],
-            [1e6, 8e6],
-            [3e6, 8e6],
-            [3e6, 6e6],
-            [1e6, 6e6],
-          ],
-        ],
-      },
-    },
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [-2e6, -1e6],
-            [-1e6, 1e6],
-            [0, -1e6],
-            [-2e6, -1e6],
-          ],
-        ],
-      },
-    },
-  ],
-};
+
 let features = [];
 initializeQuadrant(1, csv);
 
 function initializeQuadrant(quadrantNum, quadrantData){
   //Let's cycle through the JSON data.  
-  
+  //let projection = map2.getView().getProjection();
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
-    let longitude = Number(data.Longitude);
-    let latitude = Number(data.Latitude);
-    let point = new Point([longitude, latitude]);
-    let feature = new Feature(point
-        //geometry: new Circle([-122.48, 37.67], 1e6)
+    let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
+    
+    if(isNaN(longitude)){
+      let test = 0;   
+    }
+    let latitude = Number(data.Latitude.replace(new RegExp("[A-Za-z]", "")));
+    let point = [latitude, longitude];
+    //let center = transform(fromLonLat([-122.48, 37.67]))
+    let center =  [-122.48, 37.67];
+    let feature = new Feature(//point
+    
+        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")), 1e6)}
       )
     features.push(feature);    
   } 
   
 }
 
-const source = new VectorSource({
-  features: new GeoJSON().readFeatures(geojsonObject)
-});
 
-const vectorLayer = new VectorLayer({
-  source:source,
-  style: styles
-});
 
 const image = new CircleStyle({
   radius: 5,
@@ -341,16 +271,3 @@ const map4 = new Map({
   layers: [new TileLayer({source: new OSM()})],
   view: view,
 });
-
-
-
-/**
- * TODO: Load the jsn data
- */
-// d3.json('PATH_TO_JSON').then(function (us) {
-//   const layer = new CanvasLayer({
-//     features: topojson.feature(us, us.objects.counties),
-//   });
-
-//   map.addLayer(layer);
-// });
