@@ -1,3 +1,11 @@
+import Map from 'ol/Map.js';
+//import Stamen from 'ol/source/Stamen.js';
+import View from 'ol/View.js';
+import {Layer, Tile as TileLayer} from 'ol/layer.js';
+import {fromLonLat, toLonLat} from 'ol/proj.js';
+import {getCenter, getWidth} from 'ol/extent.js';
+import OSM from 'ol/source/OSM';
+import csv from './emdat_earthquake.csv'
 import './style.css';
 import {Map, View} from 'ol';
 import TileLayer from 'ol/layer/Tile';
@@ -18,6 +26,23 @@ import {
   Stroke,
   Style,
 } from 'ol/style.js';
+
+
+class CanvasLayer extends Layer {
+  constructor(options, dim) {
+    super(options);
+
+    this.features = options.features;
+    this.dim = options.dim;
+
+    this.svg = d3
+      .select(document.createElement('div'))
+      .append('svg')
+      .style('position', 'absolute');
+
+    //this.svg.append('path').datum(this.features).attr('class', 'boundary');
+  }
+}
 
 
 // For D3 integration
@@ -152,28 +177,28 @@ const styles = [
    *    returned as `MultiPoint` geometry, which will be used to render
    *    the style.
    */
-  // new Style({
-  //   stroke: new Stroke({
-  //     color: 'blue',
-  //     width: 3,
-  //   }),
-  //   fill: new Fill({
-  //     color: 'rgba(255, 0, 0, 0.1)',
-  //   }),
-  // }),
-  // new Style({
-  //   image: new CircleStyle({
-  //     radius: 5,
-  //     fill: new Fill({
-  //       color: 'orange',
-  //     }),
-  //   }),
-  //   geometry: function (feature) {
-  //     // return the coordinates of the first ring of the polygon
-  //     const coordinates = feature.getGeometry().getCoordinates()[0];
-  //     return new MultiPoint(coordinates);
-  //   },
-  // }),
+  new Style({
+    stroke: new Stroke({
+      color: 'blue',
+      width: 3,
+    }),
+    fill: new Fill({
+      color: 'rgba(0, 0, 255, 0.1)',
+    }),
+  }),
+  new Style({
+    image: new CircleStyle({
+      radius: 5,
+      fill: new Fill({
+        color: 'orange',
+      }),
+    }),
+    geometry: function (feature) {
+      // return the coordinates of the first ring of the polygon
+      const coordinates = feature.getGeometry().getCoordinates()[0];
+      return new MultiPoint(coordinates);
+    },
+  }),
 ];
 
 
@@ -202,6 +227,78 @@ const layer = new TileLayer({source: new OSM()})
 console.log(csv[5].Year)
 console.log(csv[5].Latitude)
 
+const geojsonObject = {
+  'type': 'FeatureCollection',
+  'crs': {
+    'type': 'name',
+    'properties': {
+      'name': 'EPSG:3857',
+    },
+  },
+  'features': [
+    {
+      'type': 'Feature',
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
+          [
+            [-5e6, 6e6],
+            [-5e6, 8e6],
+            [-3e6, 8e6],
+            [-3e6, 6e6],
+            [-5e6, 6e6],
+          ],
+        ],
+      },
+    },
+    {
+      'type': 'Feature',
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
+          [
+            [-2e6, 6e6],
+            [-2e6, 8e6],
+            [0, 8e6],
+            [0, 6e6],
+            [-2e6, 6e6],
+          ],
+        ],
+      },
+    },
+    {
+      'type': 'Feature',
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
+          [
+            [1e6, 6e6],
+            [1e6, 8e6],
+            [3e6, 8e6],
+            [3e6, 6e6],
+            [1e6, 6e6],
+          ],
+        ],
+      },
+    },
+    {
+      'type': 'Feature',
+      'geometry': {
+        'type': 'Polygon',
+        'coordinates': [
+          [
+            [-2e6, -1e6],
+            [-1e6, 1e6],
+            [0, -1e6],
+            [-2e6, -1e6],
+          ],
+        ],
+      },
+    },
+  ],
+};
+let features = [];
+initializeQuadrant(1, csv);
 
 let features = [];
 initializeQuadrant(1, csv);
@@ -265,9 +362,71 @@ const map3 = new Map({
   view: view,
 });
 
+
+
+/**
+ * Load the topojson data and create an ol/layer/Image for that data.
+ */
+/*
+d3.json('data/topojson/us.json').then(function (us) {
+  const layer = new CanvasLayer({
+    features: topojson.feature(us, us.objects.counties),
+  });
+
+  map.addLayer(layer);
 // Open question: how do we switch off of map views for graph/line charts?
 const map4 = new Map({
   target: 'map4',
   layers: [new TileLayer({source: new OSM()})],
   view: view,
 });
+
+// event handler for when quadrant dropdown menus change
+function dropDownChange(quadrant) {
+  let dim = document.getElementById("select" + quadrant).value;
+  // quadrant 1-4 specifies which map was changed,
+  // dim specifies which option was selected
+  console.log("Quadrant", quadrant, ":", dim);
+}
+
+// dims hold the data attributes the user can pick from dropdown menu
+let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
+
+// for each quadrant
+for (let i = 1; i < 5; i++) {
+
+  // add event handler to each menu
+  d3.select("#select" + i)
+  .on("change", function() { dropDownChange(i); });
+
+  // Q2/Q3 option specific to last quadrant
+  if (i == 4) {
+    d3.select("#select" + i)
+    .append("option")
+    .text("Q2/Q3");
+  }
+
+  // add an option for each dim to menu
+  for (let j = 0; j < dims.length; j++) {
+    d3.select("#select" + i)
+    .append("option")
+    .text(dims[j]);
+  }
+
+  // rotate dims
+  let firstElement = dims.shift();
+  dims.push(firstElement);
+}
+
+
+
+/**
+ * TODO: Load the jsn data
+ */
+// d3.json('PATH_TO_JSON').then(function (us) {
+//   const layer = new CanvasLayer({
+//     features: topojson.feature(us, us.objects.counties),
+//   });
+
+//   map.addLayer(layer);
+// });
