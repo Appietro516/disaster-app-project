@@ -1,14 +1,6 @@
-import Map from 'ol/Map.js';
-//import Stamen from 'ol/source/Stamen.js';
-import View from 'ol/View.js';
+
 import {Layer, Tile as TileLayer} from 'ol/layer.js';
-import {fromLonLat, toLonLat} from 'ol/proj.js';
-import {getCenter, getWidth} from 'ol/extent.js';
-import OSM from 'ol/source/OSM';
-import csv from './emdat_earthquake.csv'
-import './style.css';
 import {Map, View} from 'ol';
-import TileLayer from 'ol/layer/Tile';
 import Feature from 'ol/Feature.js';
 //import OSM from 'ol/source/OSM';
 
@@ -360,6 +352,12 @@ const map3 = new Map({
   view: view,
 });
 
+const map4 = new Map({
+  target: 'map4',
+  layers: [new TileLayer({source: new OSM()})],
+  view: view,
+});
+
 
 
 /**
@@ -386,9 +384,26 @@ function dropDownChange(quadrant) {
   // dim specifies which option was selected
   console.log("Quadrant", quadrant, ":", dim);
 }
+*/
 
 // dims hold the data attributes the user can pick from dropdown menu
 let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
+// let disaster = csv
+console.log("HI")
+console.log(csv)
+
+function getUniqueValues(data, fieldName) {
+  let uniqueValues = new Set();
+  for (let item of data) {
+    uniqueValues.add(item[fieldName]);
+  }
+  return Array.from(uniqueValues);
+}
+
+let opts = getUniqueValues(csv, "Disaster Type")
+console.log(opts)
+
+
 
 // for each quadrant
 for (let i = 1; i < 5; i++) {
@@ -409,6 +424,12 @@ for (let i = 1; i < 5; i++) {
     d3.select("#select" + i)
     .append("option")
     .text(dims[j]);
+  }
+
+  for (let j = 0; j < opts.length; j++) {
+    d3.select("#disaster-select" + i)
+    .append("option")
+    .text(opts[j]);
   }
 
   // rotate dims
