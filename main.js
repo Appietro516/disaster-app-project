@@ -212,17 +212,17 @@ function initializeQuadrant(quadrantNum, quadrantData){
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
-    
+    let magnitude = Number(data["Dis Mag Value"]);
     if(isNaN(longitude)){
       let test = 0;   
     }
     let latitude = Number(data.Latitude.replace(new RegExp("[A-Za-z]", "")));
-    let point = [latitude, longitude];
+    let point = [longitude, latitude];
     //let center = transform(fromLonLat([-122.48, 37.67]))
     let center =  [-122.48, 37.67];
     let feature = new Feature(//point
-    
-        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")), 1e6)}
+    //1e6
+        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
       )
     features.push(feature);    
   } 
