@@ -387,10 +387,11 @@ function dropDownChange(quadrant) {
 */
 
 // dims hold the data attributes the user can pick from dropdown menu
-let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
+// let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
 // let disaster = csv
 console.log("HI")
-console.log(csv)
+console.log(csv[0])
+let dims = Object.entries(csv[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
 
 function getUniqueValues(data, fieldName) {
   let uniqueValues = new Set();
