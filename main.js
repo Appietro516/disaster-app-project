@@ -1,7 +1,6 @@
 
 import {Layer, Tile as TileLayer} from 'ol/layer.js';
 import {Map, View} from 'ol';
-import TileLayer from 'ol/layer/Tile';
 import Feature from 'ol/Feature.js';
 //import OSM from 'ol/source/OSM';
 
@@ -221,20 +220,17 @@ const layer = new TileLayer({source: new OSM()})
 //   })
 // });
 
-console.log(csv[5].Year)
-console.log(csv[5].Latitude)
 
+let features = initializeQuadrant(1, csvData);
 
-let features = [];
-initializeQuadrant(1, csv);
-
-function initializeQuadrant(quadrantNum, quadrantData){
+function initializeQuadrant(quadrantNum, quadrantData, field){
   //Let's cycle through the JSON data.  
   //let projection = map2.getView().getProjection();
+  let features = [];
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
-    let magnitude = Number(data["Dis Mag Value"]);
+    let magnitude = Number(data[field || "Dis Mag Value"]);
     if(isNaN(longitude)){
       let test = 0;   
     }
@@ -248,16 +244,10 @@ function initializeQuadrant(quadrantNum, quadrantData){
       )
     features.push(feature);    
   } 
-  
+
+  return features
 }
 
-
-
-const image = new CircleStyle({
-  radius: 5,
-  fill: null,
-  stroke: new Stroke({color: 'red', width: 1}),
-});
 
 const geojsonObject = {
   'type': 'FeatureCollection',
@@ -329,24 +319,6 @@ const geojsonObject = {
     },
   ],
 };
-let features = [];
-initializeQuadrant(1, csv);
-
-function initializeQuadrant(quadrantNum, quadrantData){
-  //Let's cycle through the JSON data.  
-  
-  for(let i = 0; i < quadrantData.length; i++){
-    let data = quadrantData[i];
-    let longitude = Number(data.Longitude);
-    let latitude = Number(data.Latitude);
-    let point = new Point([longitude, latitude]);
-    let feature = new Feature(point
-        //geometry: new Circle([-122.48, 37.67], 1e6)
-      )
-    features.push(feature);    
-  } 
-  
-}
 
 const source = new VectorSource({
   features: new GeoJSON().readFeatures(geojsonObject)
@@ -450,7 +422,7 @@ for (let i = 1; i < 5; i++) {
 
   // add event handler to each menu
   d3.select("#select" + i)
-  .on("change", function() { dropDownChange(i); });
+  .on("change", function(e) { dropDownChange(e, i); });
 
   // Q2/Q3 option specific to last quadrant
   if (i == 4) {
@@ -490,9 +462,27 @@ for (let i = 1; i < 5; i++) {
 //   map.addLayer(layer);
 // });
 
+//drop down change handler
+
+let dropDownChange = (e, i) => {
+  console.log('woop2')
+  console.log(e.target.value)
+  console.log(i)
+  
+  let features = initializeQuadrant(i, csvData, e.target.value)
+  const mSource = new VectorSource({
+    features: features,
+    style: {
+      'circle-radius': 30,
+      'circle-fill-color':"red"
+    }
+  })
+  let l = map2.getLayers().getArray()[1];
+  l.setSource(mSource)
+
+}
 
 // File upload handler 
-
 $("#fileForm").on("change", (e) => {
   console.log(e)
   let files = e.target.files; // FileList object
@@ -504,7 +494,18 @@ $("#fileForm").on("change", (e) => {
   // Define the onload function that will be called when the file is loaded
   reader.onload = function(event) {
     fileContent = event.target.result; // Get the file content as a string
-    let csvData = d3.csvParse(fileContent)
+    csvData = d3.csvParse(fileContent)
+    let features = initializeQuadrant(1, csvData);
+    const mSource = new VectorSource({
+      features: features,
+      style: {
+        'circle-radius': 30,
+        'circle-fill-color':"red"
+      }
+    })
+    let l = map2.getLayers().getArray()[1];
+    l.setSource(mSource)
+
   };
 
   reader.readAsText(f)
