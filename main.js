@@ -19,6 +19,10 @@ import {
   Style,
 } from 'ol/style.js';
 
+import $ from "jquery";
+
+//global JsonData
+let csvData  = csv;
 
 class CanvasLayer extends Layer {
   constructor(options, dim) {
@@ -450,3 +454,23 @@ for (let i = 1; i < 5; i++) {
 
 //   map.addLayer(layer);
 // });
+
+
+// File upload handler 
+
+$("#fileForm").on("change", (e) => {
+  console.log(e)
+  let files = e.target.files; // FileList object
+  // use the 1st file from the list
+  let f = files[0];
+  const reader = new FileReader(); // Create a new FileReader object
+  let fileContent;
+
+  // Define the onload function that will be called when the file is loaded
+  reader.onload = function(event) {
+    fileContent = event.target.result; // Get the file content as a string
+    let csvData = d3.csvParse(fileContent)
+  };
+
+  reader.readAsText(f)
+})
