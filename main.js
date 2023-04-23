@@ -21,6 +21,10 @@ import {
   Style,
 } from 'ol/style.js';
 
+import $ from "jquery";
+
+//global JsonData
+let csvData  = csv;
 
 class CanvasLayer extends Layer {
   constructor(options, dim) {
@@ -218,8 +222,34 @@ const layer = new TileLayer({source: new OSM()})
 //   })
 // });
 
-console.log(csv[5].Year)
-console.log(csv[5].Latitude)
+
+let features = initializeQuadrant(1, csvData);
+
+function initializeQuadrant(quadrantNum, quadrantData, field){
+  //Let's cycle through the JSON data.  
+  //let projection = map2.getView().getProjection();
+  let features = [];
+  for(let i = 0; i < quadrantData.length; i++){
+    let data = quadrantData[i];
+    let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
+    let magnitude = Number(data[field || "Dis Mag Value"]);
+    if(isNaN(longitude)){
+      let test = 0;   
+    }
+    let latitude = Number(data.Latitude.replace(new RegExp("[A-Za-z]", "")));
+    let point = [longitude, latitude];
+    //let center = transform(fromLonLat([-122.48, 37.67]))
+    let center =  [-122.48, 37.67];
+    let feature = new Feature(//point
+    //1e6
+        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
+      )
+    features.push(feature);    
+  } 
+
+  return features
+}
+
 
 const geojsonObject = {
   'type': 'FeatureCollection',
@@ -291,6 +321,7 @@ const geojsonObject = {
     },
   ],
 };
+
 let circleRadiiLayerFeatures = [];
 let heatMapLayerFeatures = [];
 initializeCircleRadiiQuadrant(1, csv);
@@ -401,13 +432,6 @@ const map4 = new Map({
 });
 
 // event handler for when quadrant dropdown menus change
-function dropDownChange(quadrant) {
-  let dim = document.getElementById("select" + quadrant).value;
-  // quadrant 1-4 specifies which map was changed,
-  // dim specifies which option was selected
-  console.log("Quadrant", quadrant, ":", dim);
-}
-
 
 
 /**
@@ -437,10 +461,11 @@ function dropDownChange(quadrant) {
 */
 
 // dims hold the data attributes the user can pick from dropdown menu
-let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
+// let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
 // let disaster = csv
 console.log("HI")
-console.log(csv)
+console.log(csv[0])
+let dims = Object.entries(csv[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
 
 function getUniqueValues(data, fieldName) {
   let uniqueValues = new Set();
@@ -460,7 +485,7 @@ for (let i = 1; i < 5; i++) {
 
   // add event handler to each menu
   d3.select("#select" + i)
-  .on("change", function() { dropDownChange(i); });
+  .on("change", function(e) { dropDownChange(e, i); });
 
   // Q2/Q3 option specific to last quadrant
   if (i == 4) {
@@ -498,4 +523,55 @@ for (let i = 1; i < 5; i++) {
 //   });
 
 //   map.addLayer(layer);
+
 // });
+// });
+
+//drop down change handler
+
+let dropDownChange = (e, i) => {
+  console.log('woop2')
+  console.log(e.target.value)
+  console.log(i)
+  
+  let features = initializeQuadrant(i, csvData, e.target.value)
+  const mSource = new VectorSource({
+    features: features,
+    style: {
+      'circle-radius': 30,
+      'circle-fill-color':"red"
+    }
+  })
+  let l = map2.getLayers().getArray()[1];
+  l.setSource(mSource)
+
+}
+
+// File upload handler 
+$("#fileForm").on("change", (e) => {
+  console.log(e)
+  let files = e.target.files; // FileList object
+  // use the 1st file from the list
+  let f = files[0];
+  const reader = new FileReader(); // Create a new FileReader object
+  let fileContent;
+
+  // Define the onload function that will be called when the file is loaded
+  reader.onload = function(event) {
+    fileContent = event.target.result; // Get the file content as a string
+    csvData = d3.csvParse(fileContent)
+    let features = initializeQuadrant(1, csvData);
+    const mSource = new VectorSource({
+      features: features,
+      style: {
+        'circle-radius': 30,
+        'circle-fill-color':"red"
+      }
+    })
+    let l = map2.getLayers().getArray()[1];
+    l.setSource(mSource)
+
+  };
+
+  reader.readAsText(f)
+})
