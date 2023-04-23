@@ -1,6 +1,7 @@
 
 import {Layer, Tile as TileLayer} from 'ol/layer.js';
 import {Map, View} from 'ol';
+import TileLayer from 'ol/layer/Tile';
 import Feature from 'ol/Feature.js';
 //import OSM from 'ol/source/OSM';
 
@@ -11,7 +12,7 @@ import MultiPoint from 'ol/geom/MultiPoint.js'
 import GeoJSON from 'ol/format/GeoJSON'
 import {Circle, GeometryCollection, Point, Polygon} from 'ol/geom.js';
 import {OSM, Vector as VectorSource} from 'ol/source.js';
-
+import {fromLonLat, toLonLat, get} from 'ol/proj.js';
 import {
   Circle as CircleStyle,
   Fill,
@@ -220,9 +221,43 @@ const layer = new TileLayer({source: new OSM()})
 //   })
 // });
 
-console.log(csv[6].Year)
-console.log(csv[6].Latitude)
-//let header = csv[6].split(',');
+console.log(csv[5].Year)
+console.log(csv[5].Latitude)
+
+
+let features = [];
+initializeQuadrant(1, csv);
+
+function initializeQuadrant(quadrantNum, quadrantData){
+  //Let's cycle through the JSON data.  
+  //let projection = map2.getView().getProjection();
+  for(let i = 0; i < quadrantData.length; i++){
+    let data = quadrantData[i];
+    let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
+    let magnitude = Number(data["Dis Mag Value"]);
+    if(isNaN(longitude)){
+      let test = 0;   
+    }
+    let latitude = Number(data.Latitude.replace(new RegExp("[A-Za-z]", "")));
+    let point = [longitude, latitude];
+    //let center = transform(fromLonLat([-122.48, 37.67]))
+    let center =  [-122.48, 37.67];
+    let feature = new Feature(//point
+    //1e6
+        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
+      )
+    features.push(feature);    
+  } 
+  
+}
+
+
+
+const image = new CircleStyle({
+  radius: 5,
+  fill: null,
+  stroke: new Stroke({color: 'red', width: 1}),
+});
 
 const geojsonObject = {
   'type': 'FeatureCollection',
