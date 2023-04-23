@@ -1,18 +1,13 @@
-import Map from 'ol/Map.js';
 //import Stamen from 'ol/source/Stamen.js';
-import View from 'ol/View.js';
-import {Layer, Tile as TileLayer} from 'ol/layer.js';
-import {fromLonLat, toLonLat} from 'ol/proj.js';
+import KML from 'ol/format/KML.js';
+import {Heatmap as HeatmapLayer,Layer, Tile as TileLayer} from 'ol/layer.js';
 import {getCenter, getWidth} from 'ol/extent.js';
-import OSM from 'ol/source/OSM';
 import csv from './emdat_earthquake.csv'
 import './style.css';
 import {Map, View} from 'ol';
-import TileLayer from 'ol/layer/Tile';
 import Feature from 'ol/Feature.js';
 //import OSM from 'ol/source/OSM';
 
-import csv from './emdat_earthquake.csv'
 import VectorLayer from 'ol/layer/Vector.js'
 import MultiPoint from 'ol/geom/MultiPoint.js'
 
@@ -297,13 +292,12 @@ const geojsonObject = {
     },
   ],
 };
-let features = [];
-initializeQuadrant(1, csv);
+let circleRadiiLayerFeatures = [];
+let heatMapLayerFeatures = [];
+initializeCircleRadiiQuadrant(1, csv);
+initializeHeatMapQuadrant(csv)
 
-let features = [];
-initializeQuadrant(1, csv);
-
-function initializeQuadrant(quadrantNum, quadrantData){
+function initializeCircleRadiiQuadrant(quadrantNum, quadrantData){
   //Let's cycle through the JSON data.  
   //let projection = map2.getView().getProjection();
   for(let i = 0; i < quadrantData.length; i++){
@@ -321,9 +315,29 @@ function initializeQuadrant(quadrantNum, quadrantData){
     //1e6
         {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
       )
-    features.push(feature);    
+    circleRadiiLayerFeatures.push(feature);    
   } 
   
+}
+
+function initializeHeatMapQuadrant(quadrantData){
+  for(let i = 0; i < quadrantData.length; i++){
+    let data = quadrantData[i];
+    let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
+    let magnitude = Number(data["Dis Mag Value"]);
+    if(isNaN(longitude)){
+      let test = 0;   
+    }
+    let latitude = Number(data.Latitude.replace(new RegExp("[A-Za-z]", "")));
+    let point = [longitude, latitude];
+    //let center = transform(fromLonLat([-122.48, 37.67]))
+    let center =  [-122.48, 37.67];
+    let feature = new Feature(//point
+    //1e6
+    {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
+      )
+      heatMapLayerFeatures.push(feature);    
+  } 
 }
 
 
@@ -334,15 +348,34 @@ const image = new CircleStyle({
   stroke: new Stroke({color: 'red', width: 1}),
 });
 
-const vectorLayer2 = new VectorLayer({
+const circleMagLayer = new VectorLayer({
   source: new VectorSource({
-    features: features,
+    features: circleRadiiLayerFeatures,
     style: {
       'circle-radius': 30,
       'circle-fill-color':"red"
     }
   })
 })
+
+const heatMapLayer = new HeatmapLayer({
+  source: new VectorSource({
+    url: './2012_Earthquakes_Mag5.kml',
+    format: new KML({
+      extractStyles: false,
+    }),
+  }),
+  blur: 15,
+  radius: 5,
+  weight: function (feature) {
+    // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+    // standards-violating <magnitude> tag in each Placemark.  We extract it from
+    // the Placemark's name instead.
+    const name = feature.get('name');
+    const magnitude = parseFloat(name.substr(2));
+    return magnitude - 5;
+  },
+});
 
 const map1 = new Map({
   target: 'map1',
@@ -352,15 +385,29 @@ const map1 = new Map({
 
 const map2 = new Map({
   target: 'map2',
-  layers: [new TileLayer({source: new OSM()}), vectorLayer2],
+  layers: [new TileLayer({source: new OSM()}), circleMagLayer],
   view: view,
 });
 
 const map3 = new Map({
   target: 'map3',
+  layers: [new TileLayer({source: new OSM()}), heatMapLayer],
+  view: view,
+});
+
+const map4 = new Map({
+  target: 'map4',
   layers: [new TileLayer({source: new OSM()})],
   view: view,
 });
+
+// event handler for when quadrant dropdown menus change
+function dropDownChange(quadrant) {
+  let dim = document.getElementById("select" + quadrant).value;
+  // quadrant 1-4 specifies which map was changed,
+  // dim specifies which option was selected
+  console.log("Quadrant", quadrant, ":", dim);
+}
 
 
 
@@ -418,7 +465,7 @@ for (let i = 1; i < 5; i++) {
   dims.push(firstElement);
 }
 
-
+*/
 
 /**
  * TODO: Load the jsn data
