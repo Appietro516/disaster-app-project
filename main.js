@@ -1,4 +1,3 @@
-//import Stamen from 'ol/source/Stamen.js';
 import KML from 'ol/format/KML.js';
 import {Heatmap as HeatmapLayer,Layer, Tile as TileLayer} from 'ol/layer.js';
 import {getCenter, getWidth} from 'ol/extent.js';
@@ -435,9 +434,26 @@ function dropDownChange(quadrant) {
   // dim specifies which option was selected
   console.log("Quadrant", quadrant, ":", dim);
 }
+*/
 
 // dims hold the data attributes the user can pick from dropdown menu
 let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
+// let disaster = csv
+console.log("HI")
+console.log(csv)
+
+function getUniqueValues(data, fieldName) {
+  let uniqueValues = new Set();
+  for (let item of data) {
+    uniqueValues.add(item[fieldName]);
+  }
+  return Array.from(uniqueValues);
+}
+
+let opts = getUniqueValues(csv, "Disaster Type")
+console.log(opts)
+
+
 
 // for each quadrant
 for (let i = 1; i < 5; i++) {
@@ -460,12 +476,18 @@ for (let i = 1; i < 5; i++) {
     .text(dims[j]);
   }
 
+  for (let j = 0; j < opts.length; j++) {
+    d3.select("#disaster-select" + i)
+    .append("option")
+    .text(opts[j]);
+  }
+
   // rotate dims
   let firstElement = dims.shift();
   dims.push(firstElement);
 }
 
-*/
+
 
 /**
  * TODO: Load the jsn data
