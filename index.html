@@ -22,34 +22,43 @@
       }
     </style>
   </head>
-
   <script src="https://cdn.jsdelivr.net/npm/d3@7.4.4/dist/d3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson@3.0.2/dist/topojson.js"></script>
   <script type="module" src="./main.js"></script>
-
   <body>
     <div class="wrapper">
       <div class="half">
         <div id="map1" class="map"></div>
         <select id="select1"></select>
+        <select id="disaster-select1"></select>
+        <input type="button" id="chart1" value="Chart"> 
       </div>
       <div class="half">
         <div id="map2" class="map"></div>
         <select id="select2"></select>
+        <select id="disaster-select2"></select>
+        <input type="button" id="chart2" value="Chart"> 
       </div>
     </div>
     <div class="wrapper">
       <div class="half">
         <div id="map3" class="map"></div>
         <select id="select3"></select>
+        <select id="disaster-select3"></select>
+        <input type="button" id="chart3" value="Chart"> 
       </div>
       <div class="half">
         <div id="map4" class="map"></div>
         <select id="select4"></select>
+        <select id="disaster-select4"></select>
+        <input type="button" id="chart4" value="Chart"> 
       </div>
     </div>
     
-    <form id="myForm">
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.4.4/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson@3.0.2/dist/topojson.js"></script>
+    <script type="module" src="./main.js"></script>
+    <form id="fileForm">
       <input type="file" id="csvFile" accept=".csv" />
       <br />
       <input type="submit" value="Submit" onclick="readCSVFile();"/>
