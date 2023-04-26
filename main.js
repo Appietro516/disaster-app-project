@@ -506,6 +506,9 @@ maps.forEach((map, i) => {
     }
   };
 
+  
+//todo add slider wiring
+
   map.on('singleclick', displayTooltip);
   $("#tooltip").css("font-size", 12);
 });
