@@ -1,6 +1,6 @@
 
 import {Layer, Tile as TileLayer} from 'ol/layer.js';
-import {Map, View} from 'ol';
+import {Map, View, Overlay} from 'ol';
 import Feature from 'ol/Feature.js';
 //import OSM from 'ol/source/OSM';
 
@@ -254,6 +254,7 @@ function getFeatures(quadrantData, field){
     //1e6
         {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),(1000000/2)*magnitude )}
       )
+    feature.set("data", data)
     features.push(feature);    
   } 
 
@@ -480,3 +481,31 @@ function getUniqueValues(data, fieldName) {
   return Array.from(uniqueValues);
 }
 
+
+//todo add tooltip style
+maps.forEach((map, i) => {
+  console.log("x")
+  console.log(map)
+  var tooltip = document.getElementById('tooltip' + i);
+  var overlay = new Overlay({
+    element: tooltip,
+    offset: [10, 0],
+    positioning: 'bottom-left'
+  });
+  map.addOverlay(overlay);
+
+  function displayTooltip(evt) {
+    var pixel = evt.pixel;
+    var feature = map.forEachFeatureAtPixel(pixel, function(feature) {
+      return feature;
+    });
+    tooltip.style.display = feature ? '' : 'none';
+    if (feature) {
+      overlay.setPosition(evt.coordinate);
+      tooltip.innerHTML = JSON.stringify(feature.get('data'), null, 2);
+    }
+  };
+
+  map.on('singleclick', displayTooltip);
+  $("#tooltip").css("font-size", 12);
+});
