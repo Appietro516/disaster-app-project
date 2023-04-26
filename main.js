@@ -1,7 +1,12 @@
 import KML from 'ol/format/KML.js';
 import {Heatmap as HeatmapLayer,Layer, Tile as TileLayer} from 'ol/layer.js';
 import {getCenter, getWidth} from 'ol/extent.js';
-import csv from './emdat_earthquake.csv'
+import earthquakeData from './data/emdat_earthquake.csv'
+import coastalFloodData from './data/landslide.csv'
+import landSlideData from './data/coastalflood.csv'
+import tropicalCycloneData from './data/tropicalcyclone.csv'
+import tsunamiData from './data/tsunami.csv'
+import emdat_data from './data/emdat_data.csv'
 import './style.css';
 import {Map, View} from 'ol';
 import Feature from 'ol/Feature.js';
@@ -24,7 +29,9 @@ import {
 import $ from "jquery";
 
 //global JsonData
-let csvData  = csv;
+
+let disasterDataSet = [earthquakeData, coastalFloodData, landSlideData, tropicalCycloneData,tsunamiData];
+let csvData  = emdat_data;
 
 class CanvasLayer extends Layer {
   constructor(options, dim) {
@@ -324,8 +331,8 @@ const geojsonObject = {
 
 let circleRadiiLayerFeatures = [];
 let heatMapLayerFeatures = [];
-initializeCircleRadiiQuadrant(1, csv);
-initializeHeatMapQuadrant(csv)
+initializeCircleRadiiQuadrant(1, earthquakeData);
+initializeHeatMapQuadrant(earthquakeData)
 
 function initializeCircleRadiiQuadrant(quadrantNum, quadrantData){
   //Let's cycle through the JSON data.  
@@ -464,8 +471,8 @@ function dropDownChange(quadrant) {
 // let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
 // let disaster = csv
 console.log("HI")
-console.log(csv[0])
-let dims = Object.entries(csv[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
+console.log(earthquakeData[0])
+let dims = Object.entries(earthquakeData[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
 
 function getUniqueValues(data, fieldName) {
   let uniqueValues = new Set();
@@ -475,7 +482,12 @@ function getUniqueValues(data, fieldName) {
   return Array.from(uniqueValues);
 }
 
-let opts = getUniqueValues(csv, "Disaster Type")
+let opts = getUniqueValues(emdat_data, "Disaster Type")
+// let opts = [];
+// disasterDataSet.forEach(function(currentData){
+//   opts = opts.concat(getUniqueValues(currentData, "Disaster Type"))
+// })
+
 console.log(opts)
 
 
