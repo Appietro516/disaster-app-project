@@ -4,7 +4,7 @@ import {getCenter, getWidth} from 'ol/extent.js';
 import earthquakeData from './data/OtherCSV/emdat_earthquake.csv'
 import emdat_data from './data/emdat_data.csv'
 import './style.css';
-import {Map, View} from 'ol';
+import {Map, View, Overlay} from 'ol';
 import Feature from 'ol/Feature.js';
 //import OSM from 'ol/source/OSM';
 
@@ -24,10 +24,13 @@ import {
 
 import $ from "jquery";
 
-//global JsonData
-
 
 let csvData  = emdat_data;
+let features = getFeatures(csvData);
+refreshDropdowns(csvData)
+
+
+
 
 class CanvasLayer extends Layer {
   constructor(options, dim) {
@@ -203,39 +206,40 @@ const styles = [
 ];
 
 
-
-
 const view = new View({
   center: [0, 0],
   zoom: 2
 })
 
-const layer = new TileLayer({source: new OSM()})
 
-// const map = new Map({
-//   target: 'map1',
-//   layers: [
-//     new TileLayer({
-//       source: new OSM()
-//     })
-//   ],
-//   view: new View({
-//     center: [0, 0],
-//     zoom: 2
-//   })
-// });
-
-
-let features = initializeQuadrant(1, csvData);
-
-function initializeQuadrant(quadrantNum, quadrantData, field){
+function getFeatures(quadrantData, field){
   //Let's cycle through the JSON data.  
   //let projection = map2.getView().getProjection();
+  let magnitudes = [];
+  for(let i = 0; i < quadrantData.length; i++){
+    let data = quadrantData[i];
+    //console.log(data)
+    let fieldData = data[field || "Dis Mag Value"].replace(/[^0-9.]/g,'');
+    //console.log(fieldData)
+    let magnitude = Number(fieldData);
+    magnitudes.push(magnitude)
+  }
+
+  let normalizedMags = [];
+  let maxMag =  Math.max(...magnitudes)
+  let minMag = Math.min(...magnitudes)
+  //console.log(normalizedMags)
+  magnitudes.forEach((m) => {
+    let normal =  (m - minMag) / (maxMag - minMag)
+    normalizedMags.push(normal)
+  });
+  
+
   let features = [];
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
-    let magnitude = Number(data[field || "Dis Mag Value"]);
+    let magnitude = normalizedMags[i];
     if(isNaN(longitude)){
       let test = 0;   
     }
@@ -243,87 +247,57 @@ function initializeQuadrant(quadrantNum, quadrantData, field){
     let point = [longitude, latitude];
     //let center = transform(fromLonLat([-122.48, 37.67]))
     let center =  [-122.48, 37.67];
+    //console.log(magnitude)
     let feature = new Feature(//point
     //1e6
-        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
+        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),(1000000/2)*magnitude )}
       )
+    feature.set("data", data)
     features.push(feature);    
   } 
 
   return features
 }
 
+const vectorLayer1 = new VectorLayer({
+  source: new VectorSource({
+    features: features,
+    style: {
+      'circle-radius': 30,
+      'circle-fill-color':"red"
+    }
+  })
+})
 
-const geojsonObject = {
-  'type': 'FeatureCollection',
-  'crs': {
-    'type': 'name',
-    'properties': {
-      'name': 'EPSG:3857',
-    },
-  },
-  'features': [
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [-5e6, 6e6],
-            [-5e6, 8e6],
-            [-3e6, 8e6],
-            [-3e6, 6e6],
-            [-5e6, 6e6],
-          ],
-        ],
-      },
-    },
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [-2e6, 6e6],
-            [-2e6, 8e6],
-            [0, 8e6],
-            [0, 6e6],
-            [-2e6, 6e6],
-          ],
-        ],
-      },
-    },
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [1e6, 6e6],
-            [1e6, 8e6],
-            [3e6, 8e6],
-            [3e6, 6e6],
-            [1e6, 6e6],
-          ],
-        ],
-      },
-    },
-    {
-      'type': 'Feature',
-      'geometry': {
-        'type': 'Polygon',
-        'coordinates': [
-          [
-            [-2e6, -1e6],
-            [-1e6, 1e6],
-            [0, -1e6],
-            [-2e6, -1e6],
-          ],
-        ],
-      },
-    },
-  ],
-};
+const vectorLayer2 = new VectorLayer({
+  source: new VectorSource({
+    features: features,
+    style: {
+      'circle-radius': 30,
+      'circle-fill-color':"red"
+    }
+  })
+})
+
+const vectorLayer3 = new VectorLayer({
+  source: new VectorSource({
+    features: features,
+    style: {
+      'circle-radius': 30,
+      'circle-fill-color':"red"
+    }
+  })
+})
+
+const vectorLayer4 = new VectorLayer({
+  source: new VectorSource({
+    features: features,
+    style: {
+      'circle-radius': 30,
+      'circle-fill-color':"red"
+    }
+  })
+})
 
 let circleRadiiLayerFeatures = [];
 let heatMapLayerFeatures = [];
@@ -430,7 +404,7 @@ const heatMapLayer = new HeatmapLayer({
 
 const map1 = new Map({
   target: 'map1',
-  layers: [new TileLayer({source: new OSM()})],
+  layers: [new TileLayer({source: new OSM()}), vectorLayer1],
   view: view,
 });
 
@@ -448,11 +422,13 @@ const map3 = new Map({
 
 const map4 = new Map({
   target: 'map4',
-  layers: [new TileLayer({source: new OSM()})],
+  layers: [new TileLayer({source: new OSM()}), vectorLayer4],
   view: view,
 });
 
-// event handler for when quadrant dropdown menus change
+const maps = [map1, map2, map3, map4]
+const featureLayers = [vectorLayer1, vectorLayer2, vectorLayer3, vectorLayer4]
+
 
 
 /**
@@ -484,59 +460,6 @@ function dropDownChange(quadrant) {
 // dims hold the data attributes the user can pick from dropdown menu
 // let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
 // let disaster = csv
-console.log("HI")
-console.log(earthquakeData[0])
-let dims = Object.entries(earthquakeData[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
-
-function getUniqueValues(data, fieldName) {
-  let uniqueValues = new Set();
-  for (let item of data) {
-    uniqueValues.add(item[fieldName]);
-  }
-  return Array.from(uniqueValues);
-}
-
-let opts = getUniqueValues(emdat_data, "Disaster Type")
-// let opts = [];
-// disasterDataSet.forEach(function(currentData){
-//   opts = opts.concat(getUniqueValues(currentData, "Disaster Type"))
-// })
-
-console.log(opts)
-
-
-
-// for each quadrant
-for (let i = 1; i < 5; i++) {
-
-  // add event handler to each menu
-  d3.select("#select" + i)
-  .on("change", function(e) { dropDownChange(e, i); });
-
-  // Q2/Q3 option specific to last quadrant
-  if (i == 4) {
-    d3.select("#select" + i)
-    .append("option")
-    .text("Q2/Q3");
-  }
-
-  // add an option for each dim to menu
-  for (let j = 0; j < dims.length; j++) {
-    d3.select("#select" + i)
-    .append("option")
-    .text(dims[j]);
-  }
-
-  for (let j = 0; j < opts.length; j++) {
-    d3.select("#disaster-select" + i)
-    .append("option")
-    .text(opts[j]);
-  }
-
-  // rotate dims
-  let firstElement = dims.shift();
-  dims.push(firstElement);
-}
 
 
 
@@ -555,22 +478,8 @@ for (let i = 1; i < 5; i++) {
 
 //drop down change handler
 
-let dropDownChange = (e, i) => {
-  console.log('woop2')
-  console.log(e.target.value)
-  console.log(i)
-  
-  let features = initializeQuadrant(i, csvData, e.target.value)
-  const mSource = new VectorSource({
-    features: features,
-    style: {
-      'circle-radius': 30,
-      'circle-fill-color':"red"
-    }
-  })
-  let l = map2.getLayers().getArray()[1];
-  l.setSource(mSource)
-
+let dropDownChange = (e, i) => {  
+  refreshMaps(csvData, e.target.value, i)
 }
 
 // File upload handler 
@@ -586,7 +495,21 @@ $("#fileForm").on("change", (e) => {
   reader.onload = function(event) {
     fileContent = event.target.result; // Get the file content as a string
     csvData = d3.csvParse(fileContent)
-    let features = initializeQuadrant(1, csvData);
+    refreshDropdowns(csvData)
+    refreshMaps(csvData)
+  };
+
+  reader.readAsText(f)
+})
+
+//refrash all maps or map i
+const refreshMaps = (data, field = null, i = null) => {
+  const refreshMap = (m, mNumber) => {
+    console.log(mNumber)
+    console.log( $("#select" + (mNumber + 1)).val())
+    let selectedField = field || $("#select" + (mNumber + 1)).val()
+    let features = getFeatures(data, selectedField)
+    console.log(features)
     const mSource = new VectorSource({
       features: features,
       style: {
@@ -594,10 +517,169 @@ $("#fileForm").on("change", (e) => {
         'circle-fill-color':"red"
       }
     })
-    let l = map2.getLayers().getArray()[1];
-    l.setSource(mSource)
+    let l = m.getLayers().getArray()[1];
+    l.setSource(mSource);
+  }
 
+  if (!i) {
+    maps.forEach((m, mNumber) => {
+      console.log(m, mNumber)
+      refreshMap(m, mNumber)
+  })} else {
+    let m = maps[i - 1];
+    refreshMap(m)
+  }
+}
+
+function refreshDropdowns(data) {
+  let dims = Object.entries(data[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
+  let opts = getUniqueValues(data, "Disaster Type")
+
+  // for each quadrant
+  for (let i = 1; i < 5; i++) {
+    let elementID = "#select" + i
+    let disasterElementID = "#disaster-select" + i
+    // add event handler to each menu
+    d3.select(elementID)
+    .on("change", function(e) { dropDownChange(e, i); });
+
+    $(elementID).empty()
+
+    // Q2/Q3 option specific to last quadrant
+    if (i == 4) {
+      d3.select(elementID)
+      .append("option")
+      .text("Q2/Q3");
+    }
+
+    // add an option for each dim to menu
+    for (let j = 0; j < dims.length; j++) {
+      d3.select(elementID)
+      .append("option")
+      .text(dims[j]);
+    }
+
+    for (let j = 0; j < opts.length; j++) {
+      d3.select(disasterElementID)
+      .append("option")
+      .text(opts[j]);
+    }
+
+    // rotate dims
+    let firstElement = dims.shift();
+    dims.push(firstElement);
+
+    //select first option
+    $(elementID)[0].selectedIndex = 0;
+    $(disasterElementID)[0].selectedIndex = 0;
+  }
+}
+
+
+function getUniqueValues(data, fieldName) {
+  let uniqueValues = new Set();
+  for (let item of data) {
+    uniqueValues.add(item[fieldName]);
+  }
+  return Array.from(uniqueValues);
+}
+
+
+//todo add tooltip style
+maps.forEach((map, i) => {
+  console.log("x")
+  console.log(map)
+  var tooltip = document.getElementById('tooltip' + i);
+  var overlay = new Overlay({
+    element: tooltip,
+    offset: [10, 0],
+    positioning: 'bottom-left'
+  });
+  map.addOverlay(overlay);
+
+  function displayTooltip(evt) {
+    var pixel = evt.pixel;
+    var feature = map.forEachFeatureAtPixel(pixel, function(feature) {
+      return feature;
+    });
+    tooltip.style.display = feature ? '' : 'none';
+    if (feature) {
+      overlay.setPosition(evt.coordinate);
+      tooltip.innerHTML = JSON.stringify(feature.get('data'), null, 2);
+    }
   };
 
-  reader.readAsText(f)
-})
+
+  map.on('singleclick', displayTooltip);
+  $("#tooltip").css("font-size", 12);
+});
+
+//todo
+function getFilteredQuadrantData(i) {
+
+}
+
+
+//wire slider
+function getMinMaxYear(objects) {
+  let minYear = Number.MAX_SAFE_INTEGER;
+  let maxYear = Number.MIN_SAFE_INTEGER;
+  console.log(objects)
+  console.log('w')
+  for (let i = 0; i < objects.length; i++) {
+    const year = objects[i]['Year'];
+    console.log(i)
+    if (year < minYear) {
+      minYear = year;
+    }
+    if (year > maxYear) {
+      maxYear = year;
+    }
+  }
+
+  return [minYear, maxYear];
+}
+
+function refreshSlider() {
+  let [min, max] = getMinMaxYear(csvData);
+  console.log(min, max)
+  //add slider wiring
+  $("#fromSlider").attr({
+    "max" : max,        
+    "min" : min         
+  });
+
+  $("#toSlider").attr({
+    "max" : max,        
+    "min" : min     
+  });
+
+  console.log(min)
+  $("#fromSlider").val(min)
+  $("#toSlider").val(max)
+}
+
+//TODo generalize a refreshSliderDataMethod
+$("#fromSlider").on("change", (e) => {
+  //todo use intermediate for csvData
+  //todo create a global context for quadrant data
+  csvData = csvData.filter((obj) => {
+    return parseInt(obj['Year']) >= e.target.value
+  
+  })
+  console.log(csvData)
+});
+  
+
+
+$("#toSlider").on("change", (e)=> {
+  csvData = csvData.filter((obj) => {
+    return parseInt(obj['Year']) <= e.target.value
+  
+  })
+  console.log(csvData)
+});
+  
+
+
+refreshSlider();
