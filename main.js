@@ -1,11 +1,7 @@
 import KML from 'ol/format/KML.js';
 import {Heatmap as HeatmapLayer,Layer, Tile as TileLayer} from 'ol/layer.js';
 import {getCenter, getWidth} from 'ol/extent.js';
-import earthquakeData from './data/emdat_earthquake.csv'
-import coastalFloodData from './data/landslide.csv'
-import landSlideData from './data/coastalflood.csv'
-import tropicalCycloneData from './data/tropicalcyclone.csv'
-import tsunamiData from './data/tsunami.csv'
+import earthquakeData from './data/OtherCSV/emdat_earthquake.csv'
 import emdat_data from './data/emdat_data.csv'
 import './style.css';
 import {Map, View} from 'ol';
@@ -30,7 +26,7 @@ import $ from "jquery";
 
 //global JsonData
 
-let disasterDataSet = [earthquakeData, coastalFloodData, landSlideData, tropicalCycloneData,tsunamiData];
+
 let csvData  = emdat_data;
 
 class CanvasLayer extends Layer {
@@ -385,8 +381,7 @@ function initializeHeatMapQuadrant(quadrantData){
       coordinates:fromLonLat(point, get("EPSG:3857"))
      },
      properties: {magnitude:magnitude}
-    }
-       
+    }       
       heatMapLayerFeatures.push(feature);    
   } 
 }
