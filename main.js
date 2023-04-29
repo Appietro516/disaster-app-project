@@ -331,6 +331,12 @@ const geojsonObject = {
 
 let circleRadiiLayerFeatures = [];
 let heatMapLayerFeatures = [];
+let heatMapData = {
+  type: "FeatureCollection",
+  features: heatMapLayerFeatures
+};
+
+let testCoordinates = [];
 initializeCircleRadiiQuadrant(1, earthquakeData);
 initializeHeatMapQuadrant(earthquakeData)
 
@@ -357,7 +363,9 @@ function initializeCircleRadiiQuadrant(quadrantNum, quadrantData){
   
 }
 
+
 function initializeHeatMapQuadrant(quadrantData){
+  const e = 4500000;
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
@@ -368,11 +376,17 @@ function initializeHeatMapQuadrant(quadrantData){
     let latitude = Number(data.Latitude.replace(new RegExp("[A-Za-z]", "")));
     let point = [longitude, latitude];
     //let center = transform(fromLonLat([-122.48, 37.67]))
+    testCoordinates.push(point);
     let center =  [-122.48, 37.67];
-    let feature = new Feature(//point
-    //1e6
-    {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),10000*magnitude )}
-      )
+    let feature = {
+      type: "Feature",
+      geometry: {
+      type:"Point",
+      coordinates:fromLonLat(point, get("EPSG:3857"))
+     },
+     properties: {magnitude:magnitude}
+    }
+       
       heatMapLayerFeatures.push(feature);    
   } 
 }
@@ -397,20 +411,25 @@ const circleMagLayer = new VectorLayer({
 
 const heatMapLayer = new HeatmapLayer({
   source: new VectorSource({
-    url: './2012_Earthquakes_Mag5.kml',
-    format: new KML({
-      extractStyles: false,
-    }),
+    features:new GeoJSON().readFeatures(heatMapData,{
+      dataProjection: "EPSG:3857",
+      featureProject: "EPSG:3857"
+    })
+    //coordinates: testCoordinates,
+    // url: './2012_Earthquakes_Mag5.kml',
+    //  format: new KML({
+    //    extractStyles: false,
+    //  }),
   }),
   blur: 15,
-  radius: 5,
+  radius: 10,
   weight: function (feature) {
     // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
     // standards-violating <magnitude> tag in each Placemark.  We extract it from
     // the Placemark's name instead.
-    const name = feature.get('name');
-    const magnitude = parseFloat(name.substr(2));
-    return magnitude - 5;
+    //const name = feature.get('name');
+    const magnitude = feature.values_.magnitude;//parseFloat(name.substr(2));
+    return magnitude;
   },
 });
 
