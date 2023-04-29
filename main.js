@@ -224,12 +224,8 @@ function getFeatures(quadrantData, field){
   let maxMag =  Math.max(...magnitudes)
   let minMag = Math.min(...magnitudes)
   console.log(normalizedMags)
-  console.log(maxMag)
-  console.log(minMag)
   magnitudes.forEach((m) => {
-    console.log(m)
     let normal =  (m - minMag) / (maxMag - minMag)
-    console.log(normal)
     normalizedMags.push(normal)
   });
   
@@ -239,9 +235,6 @@ function getFeatures(quadrantData, field){
     let data = quadrantData[i];
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
     let magnitude = normalizedMags[i];
-    // console.log(magnitude)
-    // console.log(field)
-    // console.log(field || $("#select" + quadrantNum).find(":selected").val() || "Dis Mag Value")
     if(isNaN(longitude)){
       let test = 0;   
     }
@@ -506,9 +499,77 @@ maps.forEach((map, i) => {
     }
   };
 
-  
-//todo add slider wiring
 
   map.on('singleclick', displayTooltip);
   $("#tooltip").css("font-size", 12);
 });
+
+//todo
+function getFilteredQuadrantData(i) {
+
+}
+
+
+//wire slider
+function getMinMaxYear(objects) {
+  let minYear = Number.MAX_SAFE_INTEGER;
+  let maxYear = Number.MIN_SAFE_INTEGER;
+  console.log(objects)
+  console.log('w')
+  for (let i = 0; i < objects.length; i++) {
+    const year = objects[i]['Year'];
+    console.log(i)
+    if (year < minYear) {
+      minYear = year;
+    }
+    if (year > maxYear) {
+      maxYear = year;
+    }
+  }
+
+  return [minYear, maxYear];
+}
+
+function refreshSlider() {
+  let [min, max] = getMinMaxYear(csvData);
+  console.log(min, max)
+  //add slider wiring
+  $("#fromSlider").attr({
+    "max" : max,        
+    "min" : min         
+  });
+
+  $("#toSlider").attr({
+    "max" : max,        
+    "min" : min     
+  });
+
+  console.log(min)
+  $("#fromSlider").val(min)
+  $("#toSlider").val(max)
+}
+
+//TODo generalize a refreshSliderDataMethod
+$("#fromSlider").on("change", (e) => {
+  //todo use intermediate for csvData
+  //todo create a global context for quadrant data
+  csvData = csvData.filter((obj) => {
+    return parseInt(obj['Year']) >= e.target.value
+  
+  })
+  console.log(csvData)
+});
+  
+
+
+$("#toSlider").on("change", (e)=> {
+  csvData = csvData.filter((obj) => {
+    return parseInt(obj['Year']) <= e.target.value
+  
+  })
+  console.log(csvData)
+});
+  
+
+
+refreshSlider();
