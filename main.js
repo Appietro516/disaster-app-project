@@ -460,6 +460,133 @@ function dropDownChange(quadrant) {
 // dims hold the data attributes the user can pick from dropdown menu
 // let dims = ["Dis Mag Value", "Total Deaths", "Total Damages ('000 US$)"];
 // let disaster = csv
+console.log("HI")
+console.log(csvData[0])
+let dims = Object.entries(csvData[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
+
+function getUniqueValues(data, fieldName) {
+  let uniqueValues = new Set();
+  for (let item of data) {
+    uniqueValues.add(item[fieldName]);
+  }
+  return Array.from(uniqueValues);
+}
+
+let opts = getUniqueValues(csvData, "Disaster Type")
+console.log(opts)
+
+// boolean flags for whether each quadrant is map or chart
+let mapOrChart = [true, true, true, true];
+// function either makes a chart or restores a map for 
+// quadrant q based on flags in mapOrChart
+function makeChart(q) {
+    // if quadrant q is a map, draw a chart
+    if (mapOrChart[q-1]) {
+      // toggle flag and change button label
+      mapOrChart[q-1] = false;
+      d3.select("#chart"+q)
+        .attr('value', "Map");
+
+      // insert svg canvas as first child of map div
+      let sel = d3.select("#map"+q);
+      let svg = sel.insert("svg",":first-child")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            //.attr("style", "border:1px solid black")
+            .style("position", "relative");
+
+      // hide ol-viewport so it doesn't cover menus/buttons
+      sel.selectAll(".ol-viewport")
+          .style("visibility", "hidden");
+
+      // store width/height of svg canvas
+      let canvasWidth = Number((svg.style("width")).slice(0, -2));
+      let canvasHeight = Number((svg.style("height")).slice(0, -2));
+
+      // x,y scales to translate disaster data to svg coordinates
+      let xScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([0, canvasWidth]);
+      let yScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([0, canvasHeight]);
+
+      // scatterPoints holds points for scatter plot
+      let scatterPoints = [];
+
+      // loop to create 20 random points
+      for (let i = 0; i < 20; i++) {
+        // set random x,y coordinates
+        let randomPoint = [xScale(Math.random()), yScale(Math.random())];
+        scatterPoints.push(randomPoint);
+      }
+
+      svg.selectAll('circle')
+        .data(scatterPoints)
+        .enter()
+        .append('circle')
+        .attr("r", 5)
+        .attr("cx", function(datum) { return datum[0]; })
+        .attr("cy", function(datum) { return datum[1]; })
+        .style("fill", "blue");
+
+    }
+    // else, quadrant q is a chart, so restore map
+    else {
+      // toggle flag and and change button label
+      mapOrChart[q-1] = true;
+      d3.select("#chart"+q)
+        .attr('value', "Chart");
+
+      // select map div
+      let sel = d3.select("#map"+q);
+
+      // restore ol-viewport visibility
+      sel.selectAll(".ol-viewport")
+        .style("visibility", null);
+
+      // remove svg canvas
+      sel.selectAll("svg")
+        .remove();
+    }
+}
+
+
+// for each quadrant
+for (let i = 1; i < 5; i++) {
+
+  // add event handler to each menu
+  d3.select("#select" + i)
+  .on("change", function(e) { dropDownChange(e, i); });
+
+  // Q2/Q3 option specific to last quadrant
+  if (i == 4) {
+    d3.select("#select" + i)
+    .append("option")
+    .text("Q2/Q3");
+  }
+
+  // add an option for each dim to menu
+  for (let j = 0; j < dims.length; j++) {
+    d3.select("#select" + i)
+    .append("option")
+    .text(dims[j]);
+  }
+
+  for (let j = 0; j < opts.length; j++) {
+    d3.select("#disaster-select" + i)
+    .append("option")
+    .text(opts[j]);
+  }
+
+  // add click handler to chart-or-map buttons
+  d3.select("#chart" + i)
+  .on("click", function(e) { makeChart(i); });
+
+  // rotate dims
+  let firstElement = dims.shift();
+  dims.push(firstElement);
+}
 
 
 
@@ -576,13 +703,13 @@ function refreshDropdowns(data) {
 }
 
 
-function getUniqueValues(data, fieldName) {
-  let uniqueValues = new Set();
-  for (let item of data) {
-    uniqueValues.add(item[fieldName]);
-  }
-  return Array.from(uniqueValues);
-}
+// function getUniqueValues(data, fieldName) {
+//   let uniqueValues = new Set();
+//   for (let item of data) {
+//     uniqueValues.add(item[fieldName]);
+//   }
+//   return Array.from(uniqueValues);
+// }
 
 
 //todo add tooltip style
