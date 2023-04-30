@@ -24,6 +24,7 @@ import $ from "jquery";
 
 
 let csvData  = csv;
+let csvDataSource = csv; //todo propagate
 let features = getFeatures(csvData);
 refreshDropdowns(csvData)
 
@@ -214,7 +215,8 @@ function getFeatures(quadrantData, field){
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
     console.log(data)
-    let fieldData = data[field || "Dis Mag Value"].replace(/[^0-9.]/g,'');
+    let selected_field = data.hasOwnProperty(field) ? field : "Dis Mag Value"
+    let fieldData = data[selected_field].replace(/[^0-9.]/g,'');
     console.log(fieldData)
     let magnitude = Number(fieldData);
     magnitudes.push(magnitude)
@@ -505,7 +507,10 @@ maps.forEach((map, i) => {
 });
 
 //todo
-function getFilteredQuadrantData(i) {
+function getFilteredQuadrantData(allData, i) {
+  //filter allData by years
+
+  //filter allData by disaster
 
 }
 
@@ -551,23 +556,25 @@ function refreshSlider() {
 
 //TODo generalize a refreshSliderDataMethod
 $("#fromSlider").on("change", (e) => {
-  //todo use intermediate for csvData
-  //todo create a global context for quadrant data
-  csvData = csvData.filter((obj) => {
+  csvData = csvDataSource.filter((obj) => {
     return parseInt(obj['Year']) >= e.target.value
   
   })
-  console.log(csvData)
+  //todo make refresh all maps
+  for (let i = 1; i < 5; i++) {
+    refreshMaps(csvData, $("#select" + i).val(), i)
+  }
 });
   
 
 
 $("#toSlider").on("change", (e)=> {
-  csvData = csvData.filter((obj) => {
+  csvData = csvDataSource.filter((obj) => {
     return parseInt(obj['Year']) <= e.target.value
-  
   })
-  console.log(csvData)
+  for (let i = 1; i < 5; i++) {
+    refreshMaps(csvData, $("#select" + i).val(), i)
+  }
 });
   
 
