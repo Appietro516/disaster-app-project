@@ -776,11 +776,8 @@ function getFilteredQuadrantData(allData, i) {
 function getMinMaxYear(objects) {
   let minYear = Number.MAX_SAFE_INTEGER;
   let maxYear = Number.MIN_SAFE_INTEGER;
-  console.log(objects)
-  console.log('w')
   for (let i = 0; i < objects.length; i++) {
     const year = objects[i]['Year'];
-    console.log(i)
     if (year < minYear) {
       minYear = year;
     }
@@ -840,4 +837,7 @@ $("#toSlider").on("change", (e)=> {
 
 refreshSlider();
 
-getFilteredQuadrantData(csvData, 3)
+
+// Here is how you call the filtering stuff
+// let data = getFilteredQuadrantData(csvDataSource, 3)
+// console.log(data)
