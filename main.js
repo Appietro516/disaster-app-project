@@ -506,13 +506,33 @@ maps.forEach((map, i) => {
   $("#tooltip").css("font-size", 12);
 });
 
-//todo
 function getFilteredQuadrantData(allData, i) {
   //filter allData by years
+  let minYear = $("#fromSlider").val()
+  let maxYear = $("#toSlider").val()
+  let localData = allData.filter((obj) => {
+    return parseInt(obj['Year']) >= minYear
+  })
+  
+  localData = localData.filter((obj) => {
+    return parseInt(obj['Year']) <= maxYear
+  })
 
-  //filter allData by disaster
+  // filter allData by disaster
+  let disasterElementID = "#disaster-select" + i
+  let disasterVal = $(disasterElementID).val()
+  localData = localData.filter((obj) => {
 
+    return obj['Disaster Type'] == disasterVal
+  })
+
+  //filter by field
+  let field =  $("#select" + i).val()
+  let fields = localData.map((obj) => obj[field])
+
+  return [field, fields]
 }
+
 
 
 //wire slider
@@ -541,12 +561,14 @@ function refreshSlider() {
   //add slider wiring
   $("#fromSlider").attr({
     "max" : max,        
-    "min" : min         
+    "min" : min,
+    "val" : min        
   });
 
   $("#toSlider").attr({
     "max" : max,        
-    "min" : min     
+    "min" : min,
+    "val" : max     
   });
 
   console.log(min)
@@ -580,3 +602,5 @@ $("#toSlider").on("change", (e)=> {
 
 
 refreshSlider();
+
+getFilteredQuadrantData(csvData, 3)
