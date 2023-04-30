@@ -26,6 +26,8 @@ import $ from "jquery";
 
 
 let csvData  = emdat_data;
+let csvDataSource = emdat_data; //todo propagate
+
 let features = getFeatures(csvData);
 refreshDropdowns(csvData)
 
@@ -218,9 +220,9 @@ function getFeatures(quadrantData, field){
   let magnitudes = [];
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
-    //console.log(data)
-    let fieldData = data[field || "Dis Mag Value"].replace(/[^0-9.]/g,'');
-    //console.log(fieldData)
+    let selected_field = data.hasOwnProperty(field) ? field : "Dis Mag Value"
+    let fieldData = data[selected_field].replace(/[^0-9.]/g,'');
+    
     let magnitude = Number(fieldData);
     magnitudes.push(magnitude)
   }
@@ -741,21 +743,41 @@ maps.forEach((map, i) => {
   $("#tooltip").css("font-size", 12);
 });
 
-//todo
-function getFilteredQuadrantData(i) {
+function getFilteredQuadrantData(allData, i) {
+  //filter allData by years
+  let minYear = $("#fromSlider").val()
+  let maxYear = $("#toSlider").val()
+  let localData = allData.filter((obj) => {
+    return parseInt(obj['Year']) >= minYear
+  })
+  
+  localData = localData.filter((obj) => {
+    return parseInt(obj['Year']) <= maxYear
+  })
 
+  // filter allData by disaster
+  let disasterElementID = "#disaster-select" + i
+  let disasterVal = $(disasterElementID).val()
+  localData = localData.filter((obj) => {
+
+    return obj['Disaster Type'] == disasterVal
+  })
+
+  //filter by field
+  let field =  $("#select" + i).val()
+  let fields = localData.map((obj) => obj[field])
+
+  return [field, fields]
 }
+
 
 
 //wire slider
 function getMinMaxYear(objects) {
   let minYear = Number.MAX_SAFE_INTEGER;
   let maxYear = Number.MIN_SAFE_INTEGER;
-  console.log(objects)
-  console.log('w')
   for (let i = 0; i < objects.length; i++) {
     const year = objects[i]['Year'];
-    console.log(i)
     if (year < minYear) {
       minYear = year;
     }
@@ -773,12 +795,14 @@ function refreshSlider() {
   //add slider wiring
   $("#fromSlider").attr({
     "max" : max,        
-    "min" : min         
+    "min" : min,
+    "val" : min        
   });
 
   $("#toSlider").attr({
     "max" : max,        
-    "min" : min     
+    "min" : min,
+    "val" : max     
   });
 
   console.log(min)
@@ -788,25 +812,32 @@ function refreshSlider() {
 
 //TODo generalize a refreshSliderDataMethod
 $("#fromSlider").on("change", (e) => {
-  //todo use intermediate for csvData
-  //todo create a global context for quadrant data
-  csvData = csvData.filter((obj) => {
+  csvData = csvDataSource.filter((obj) => {
     return parseInt(obj['Year']) >= e.target.value
   
   })
-  console.log(csvData)
+  //todo make refresh all maps
+  for (let i = 1; i < 5; i++) {
+    refreshMaps(csvData, $("#select" + i).val(), i)
+  }
 });
   
 
 
 $("#toSlider").on("change", (e)=> {
-  csvData = csvData.filter((obj) => {
+  csvData = csvDataSource.filter((obj) => {
     return parseInt(obj['Year']) <= e.target.value
-  
   })
-  console.log(csvData)
+  for (let i = 1; i < 5; i++) {
+    refreshMaps(csvData, $("#select" + i).val(), i)
+  }
 });
   
 
 
 refreshSlider();
+
+
+// Here is how you call the filtering stuff
+// let data = getFilteredQuadrantData(csvDataSource, 3)
+// console.log(data)
