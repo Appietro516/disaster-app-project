@@ -24,6 +24,11 @@ import {
 
 import $ from "jquery";
 
+///Global Constants
+const VISUAL_TYPE_CIRCLES = 0;
+const VISUAL_TYPE_HEAT_MAP = 1;
+let visualTypeOptions = [VISUAL_TYPE_CIRCLES, VISUAL_TYPE_HEAT_MAP];
+let visualTypeOptionsNames = ["Circles", "Heat Map"];
 
 let csvData  = emdat_data;
 let csvDataSource = emdat_data; //todo propagate
@@ -49,131 +54,6 @@ class CanvasLayer extends Layer {
     //this.svg.append('path').datum(this.features).attr('class', 'boundary');
   }
 }
-
-
-// For D3 integration
-// https://openlayers.org/en/latest/examples/d3.html
-
-
-// sample d3 integration
-// class CanvasLayer extends Layer {
-//   constructor(options) {
-//     super(options);
-
-//     this.features = options.features;
-
-//     this.svg = d3
-//       .select(document.createElement('div'))
-//       .append('svg')
-//       .style('position', 'absolute');
-
-//     this.svg.append('path').datum(this.features).attr('class', 'boundary');
-//   }
-
-//   getSourceState() {
-//     return 'ready';
-//   }
-
-//   render(frameState) {
-//     const width = frameState.size[0];
-//     const height = frameState.size[1];
-//     const projection = frameState.viewState.projection;
-//     const d3Projection = d3.geoMercator().scale(1).translate([0, 0]);
-//     let d3Path = d3.geoPath().projection(d3Projection);
-
-//     const pixelBounds = d3Path.bounds(this.features);
-//     const pixelBoundsWidth = pixelBounds[1][0] - pixelBounds[0][0];
-//     const pixelBoundsHeight = pixelBounds[1][1] - pixelBounds[0][1];
-
-//     const geoBounds = d3.geoBounds(this.features);
-//     const geoBoundsLeftBottom = fromLonLat(geoBounds[0], projection);
-//     const geoBoundsRightTop = fromLonLat(geoBounds[1], projection);
-//     let geoBoundsWidth = geoBoundsRightTop[0] - geoBoundsLeftBottom[0];
-//     if (geoBoundsWidth < 0) {
-//       geoBoundsWidth += getWidth(projection.getExtent());
-//     }
-//     const geoBoundsHeight = geoBoundsRightTop[1] - geoBoundsLeftBottom[1];
-
-//     const widthResolution = geoBoundsWidth / pixelBoundsWidth;
-//     const heightResolution = geoBoundsHeight / pixelBoundsHeight;
-//     const r = Math.max(widthResolution, heightResolution);
-//     const scale = r / frameState.viewState.resolution;
-
-//     const center = toLonLat(getCenter(frameState.extent), projection);
-//     const angle = (-frameState.viewState.rotation * 180) / Math.PI;
-
-//     d3Projection
-//       .scale(scale)
-//       .center(center)
-//       .translate([width / 2, height / 2])
-//       .angle(angle);
-
-//     d3Path = d3Path.projection(d3Projection);
-//     d3Path(this.features);
-
-//     this.svg.attr('width', width);
-//     this.svg.attr('height', height);
-
-//     this.svg.select('path').attr('d', d3Path);
-
-//     return this.svg.node();
-//   }
-// }
-
-// https://openlayers.org/en/latest/examples/side-by-side.html
-
-// const convexHullFill = new Fill({
-//   color: 'rgba(255, 153, 0, 0.4)',
-// });
-// const convexHullStroke = new Stroke({
-//   color: 'rgba(204, 85, 0, 1)',
-//   width: 1.5,
-// });
-// const outerCircleFill = new Fill({
-//   color: 'rgba(255, 153, 102, 0.3)',
-// });
-// const innerCircleFill = new Fill({
-//   color: 'rgba(255, 165, 0, 0.7)',
-// });
-// const textFill = new Fill({
-//   color: '#fff',
-// });
-// const textStroke = new Stroke({
-//   color: 'rgba(0, 0, 0, 0.6)',
-//   width: 3,
-// });
-// const innerCircle = new CircleStyle({
-//   radius: 14,
-//   fill: innerCircleFill,
-// });
-// const outerCircle = new CircleStyle({
-//   radius: 20,
-//   fill: outerCircleFill,
-// });
-
-// const style = new Style({
-//   fill: new Fill({
-//     color: 'rgba(255, 255, 255, 0.2)',
-//   }),
-//   stroke: new Stroke({
-//     color: '#33cc33',
-//     width: 2,
-//   }),
-//   image: new CircleStyle({
-//     radius: 7,
-//     fill: new Fill({
-//       color: '#ffcc33',
-//     }),
-//   }),
-// });
-
-// const vector = new VectorLayer({
-//   source: source,
-//   style: function (feature) {
-//     const geometry = feature.getGeometry();
-//     return geometry.getType() === 'GeometryCollection' ? geodesicStyle : style;
-//   },
-// });
 
 const styles = [
   /* We are using two different styles for the polygons:
@@ -214,7 +94,7 @@ const view = new View({
 })
 
 
-function getFeatures(quadrantData, field){
+function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES){
   //Let's cycle through the JSON data.  
   //let projection = map2.getView().getProjection();
   let magnitudes = [];
@@ -250,16 +130,68 @@ function getFeatures(quadrantData, field){
     //let center = transform(fromLonLat([-122.48, 37.67]))
     let center =  [-122.48, 37.67];
     //console.log(magnitude)
-    let feature = new Feature(//point
-    //1e6
-        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),(1000000/2)*magnitude )}
-      )
-    feature.set("data", data)
-    features.push(feature);    
+    let feature = null;
+    if(visualType == VISUAL_TYPE_CIRCLES){
+       feature = new Feature(//point
+
+        {geometry: new Circle(fromLonLat(point, get("EPSG:3857")),(1000000/2)*magnitude)}
+      )     
+      feature.set("data", data)   
+    }
+    else{
+      feature = {
+        type: "Feature",
+        geometry: {
+        type:"Point",
+        coordinates:fromLonLat(point, get("EPSG:3857")),
+        data: data
+       },
+       properties: {magnitude: magnitude}
+      }
+    }    
+    
+    features.push(feature);  
+    
   } 
 
   return features
 }
+
+function createNewVectorLayer(layerFeatures){
+  return new VectorLayer({
+    source: new VectorSource({
+      features: layerFeatures,
+      style: {
+        'circle-radius': 30,
+        'circle-fill-color':"red"
+      }
+    })
+  })
+}
+
+function createVectorLayerFromSource(vectorSource){
+  return new VectorLayer({
+    source: vectorSource}
+    )  
+}
+
+function createHeatLayerFromSource(vectorSource){
+  const heatMapLayer = new HeatmapLayer({
+    source: vectorSource,
+    blur: 15,
+    radius: 10,
+    weight: function (feature) {
+      // 2012_Earthquakes_Mag5.kml stores the magnitude of each earthquake in a
+      // standards-violating <magnitude> tag in each Placemark.  We extract it from
+      // the Placemark's name instead.
+      //const name = feature.get('name');
+      const magnitude = feature.values_.magnitude;//parseFloat(name.substr(2));
+      return magnitude;
+    },
+  });
+  return heatMapLayer;
+}
+
 
 const vectorLayer1 = new VectorLayer({
   source: new VectorSource({
@@ -404,34 +336,26 @@ const heatMapLayer = new HeatmapLayer({
   },
 });
 
-const map1 = new Map({
-  target: 'map1',
-  layers: [new TileLayer({source: new OSM()}), vectorLayer1],
-  view: view,
-});
+let maps = [];
+InitializeMaps();
+function InitializeMaps(){
+  let initialLayers = [vectorLayer1, circleMagLayer, heatMapLayer, vectorLayer4];
+  initialLayers.forEach(function(layer, index){
+    let map = createNewMap(index+1, layer );
+    maps.push(map);
+  })
+}
 
-const map2 = new Map({
-  target: 'map2',
-  layers: [new TileLayer({source: new OSM()}), circleMagLayer],
-  view: view,
-});
+function createNewMap(mapIndex, layer){
+  let map = new Map({
+    target: 'map' + mapIndex,
+    layers: [new TileLayer({source: new OSM()}), layer],
+    view: view,
+  });
+  return map;
+}
 
-const map3 = new Map({
-  target: 'map3',
-  layers: [new TileLayer({source: new OSM()}), heatMapLayer],
-  view: view,
-});
-
-const map4 = new Map({
-  target: 'map4',
-  layers: [new TileLayer({source: new OSM()}), vectorLayer4],
-  view: view,
-});
-
-const maps = [map1, map2, map3, map4]
-const featureLayers = [vectorLayer1, vectorLayer2, vectorLayer3, vectorLayer4]
-
-
+//const maps = [map1, map2, map3, map4]
 
 /**
  * Load the topojson data and create an ol/layer/Image for that data.
@@ -476,6 +400,8 @@ function getUniqueValues(data, fieldName) {
 
 let opts = getUniqueValues(csvData, "Disaster Type")
 console.log(opts)
+
+
 
 // boolean flags for whether each quadrant is map or chart
 let mapOrChart = [true, true, true, true];
@@ -581,6 +507,21 @@ for (let i = 1; i < 5; i++) {
     .text(opts[j]);
   }
 
+  for(let j = 0; j < visualTypeOptions.length; j++){
+    d3.select("#visual-type" + i)
+    .on("change", function(e) { onVisChange(e)})
+    .selectAll("option")
+    .data(visualTypeOptionsNames)
+    .join("option")
+    .attr("value", function(d){return j})  
+    .text(function(d){return d} )
+    
+  }
+    
+
+  
+  
+
   // add click handler to chart-or-map buttons
   d3.select("#chart" + i)
   .on("click", function(e) { makeChart(i); });
@@ -590,7 +531,10 @@ for (let i = 1; i < 5; i++) {
   dims.push(firstElement);
 }
 
-
+function onVisChange(event){
+  refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),Number( event.target.value) -1 , event.target.selectedIndex);
+ // refreshMaps(csvData, e.target.value, i)
+}
 
 /**
  * TODO: Load the jsn data
@@ -632,27 +576,51 @@ $("#fileForm").on("change", (e) => {
 })
 
 //refrash all maps or map i
-const refreshMaps = (data, field = null, i = null) => {
+const refreshMaps = (data, field = null, i = null, visualType = VISUAL_TYPE_CIRCLES) => {
   const refreshMap = (m, mNumber) => {
     console.log(mNumber)
     console.log( $("#select" + (mNumber + 1)).val())
     let selectedField = field || $("#select" + (mNumber + 1)).val()
-    let features = getFeatures(data, selectedField)
+    let features = getFeatures(data, selectedField, visualType)
     console.log(features)
-    const mSource = new VectorSource({
-      features: features,
-      style: {
-        'circle-radius': 30,
-        'circle-fill-color':"red"
-      }
-    })
+    let mSource = null; 
+    //A vector source for circles
+
     let l = m.getLayers().getArray()[1];
-    l.setSource(mSource);
+    //Choose a visual type.  Circles or Heatmap
+    if(visualType == VISUAL_TYPE_CIRCLES){
+      mSource = new VectorSource({
+        features: features,
+        style: {
+          'circle-radius': 30,
+          'circle-fill-color':"red"
+        }
+      })
+      m.setLayers([new TileLayer({source: new OSM()}), createVectorLayerFromSource(mSource)])
+    }
+    //A vector source for heat map
+    else{
+      let heatMapData = {
+        type: "FeatureCollection",
+        features: features
+      };
+
+      mSource = new VectorSource({
+        features:new GeoJSON().readFeatures(heatMapData,{
+          dataProjection: "EPSG:3857",
+          featureProject: "EPSG:3857"
+        })
+      })
+      m.setLayers([new TileLayer({source: new OSM()}), createHeatLayerFromSource(mSource)])
+      
+    }    
+    
+    //l.setSource(mSource);
   }
 
   if (!i) {
     maps.forEach((m, mNumber) => {
-      console.log(m, mNumber)
+      //console.log(m, mNumber)
       refreshMap(m, mNumber)
   })} else {
     let m = maps[i - 1];
@@ -716,8 +684,8 @@ function refreshDropdowns(data) {
 
 //todo add tooltip style
 maps.forEach((map, i) => {
-  console.log("x")
-  console.log(map)
+  //console.log("x")
+  //console.log(map)
   var tooltip = document.getElementById('tooltip' + i);
   var overlay = new Overlay({
     element: tooltip,
