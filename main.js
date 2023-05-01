@@ -146,7 +146,7 @@ function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES){
         coordinates:fromLonLat(point, get("EPSG:3857")),
         data: data
        },
-       properties: {magnitude:((1000000/2)*magnitude )}
+       properties: {magnitude: magnitude}
       }
     }    
     
@@ -518,9 +518,7 @@ for (let i = 1; i < 5; i++) {
     
   }
     
-function onVisChange(event){
-  refreshMaps(csvData,null, event.target.value, event.target.selectedIndex);
-}
+
   
   
 
@@ -533,7 +531,10 @@ function onVisChange(event){
   dims.push(firstElement);
 }
 
-
+function onVisChange(event){
+  refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),Number( event.target.value) -1 , event.target.selectedIndex);
+ // refreshMaps(csvData, e.target.value, i)
+}
 
 /**
  * TODO: Load the jsn data
@@ -599,6 +600,11 @@ const refreshMaps = (data, field = null, i = null, visualType = VISUAL_TYPE_CIRC
     }
     //A vector source for heat map
     else{
+      let heatMapData = {
+        type: "FeatureCollection",
+        features: features
+      };
+
       mSource = new VectorSource({
         features:new GeoJSON().readFeatures(heatMapData,{
           dataProjection: "EPSG:3857",
