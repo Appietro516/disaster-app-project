@@ -29,6 +29,7 @@ const VISUAL_TYPE_CIRCLES = 0;
 const VISUAL_TYPE_HEAT_MAP = 1;
 let visualTypeOptions = [VISUAL_TYPE_CIRCLES, VISUAL_TYPE_HEAT_MAP];
 let visualTypeOptionsNames = ["Circles", "Heat Map"];
+let visualTypeArray = [VISUAL_TYPE_CIRCLES, VISUAL_TYPE_CIRCLES, VISUAL_TYPE_CIRCLES,VISUAL_TYPE_CIRCLES];
 
 let csvData  = emdat_data;
 let csvDataSource = emdat_data; //todo propagate
@@ -601,7 +602,9 @@ for (let i = 1; i < 5; i++) {
 }
 
 function onVisChange(event){
-  refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),Number( event.target.value) -1 , event.target.selectedIndex);
+  let quadrantNumber = Number(event.target.id.charAt(event.target.id.length-1));
+  visualTypeArray[quadrantNumber-1] = event.target.selectedIndex;
+  refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),quadrantNumber , event.target.selectedIndex);
  // refreshMaps(csvData, e.target.value, i)
 }
 
@@ -621,7 +624,7 @@ function onVisChange(event){
 //drop down change handler
 
 let dropDownChange = (e, i) => {  
-  refreshMaps(csvData, e.target.value, i)
+  refreshMaps(csvData, e.target.value, i, visualTypeArray[i-1])
 }
 
 // File upload handler 
@@ -755,7 +758,7 @@ maps.forEach((map, i) => {
 })
 
 //refrash all maps or map i
-const refreshMaps = (data, field = null, i = null, visualType = VISUAL_TYPE_CIRCLES) => {
+const refreshMaps = (data, field = null, i = null, visualType) => {
   const refreshMap = (m, mNumber) => {
     console.log(mNumber)
     console.log( $("#select" + (mNumber + 1)).val())
