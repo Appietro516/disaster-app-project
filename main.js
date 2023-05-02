@@ -1,7 +1,7 @@
 import KML from 'ol/format/KML.js';
 import {Heatmap as HeatmapLayer,Layer, Tile as TileLayer} from 'ol/layer.js';
 import {getCenter, getWidth} from 'ol/extent.js';
-import earthquakeData from './data/OtherCSV/emdat_earthquake.csv'
+// import earthquakeData from './data/OtherCSV/emdat_earthquake.csv'
 import emdat_data from './data/emdat_data.csv'
 import './style.css';
 import {Map, View, Overlay} from 'ol';
@@ -246,8 +246,8 @@ let heatMapData = {
 };
 
 let testCoordinates = [];
-initializeCircleRadiiQuadrant(1, earthquakeData);
-initializeHeatMapQuadrant(earthquakeData)
+// initializeCircleRadiiQuadrant(1, csvDataSource);
+// initializeHeatMapQuadrant(csvDataSource)
 
 function initializeCircleRadiiQuadrant(quadrantNum, quadrantData){
   //Let's cycle through the JSON data.  
@@ -362,6 +362,11 @@ function InitializeMaps(){
   })
 }
 
+const map2 = new Map({
+  target: 'map2',
+  layers: [new TileLayer({source: new OSM()}), vectorLayer2],
+  view: view,
+});
 function createNewMap(mapIndex, layer){
   let map = new Map({
     target: 'map' + mapIndex,
@@ -371,7 +376,11 @@ function createNewMap(mapIndex, layer){
   return map;
 }
 
-//const maps = [map1, map2, map3, map4]
+const map3 = new Map({
+  target: 'map3',
+  layers: [new TileLayer({source: new OSM()}), heatMapLayer],
+  view: view,
+});
 
 
 /**
@@ -591,7 +600,14 @@ for (let i = 1; i < 5; i++) {
     .append("option")
     .text(dims[j]);
   }
+  console.log("FIRING NOW")
 
+  // for (let j = 0; j < opts.length; j++) {
+  //   console.log(opts[j])
+  //   d3.select("#disaster-select" + i)
+  //   .append("option")
+  //   .text(opts[j]);
+  // }
   for (let j = 0; j < opts.length; j++) {
     d3.select("#disaster-select" + i)
     .append("option")
