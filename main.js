@@ -357,6 +357,7 @@ function createNewMap(mapIndex, layer){
 
 //const maps = [map1, map2, map3, map4]
 
+
 /**
  * Load the topojson data and create an ol/layer/Image for that data.
  */
@@ -430,34 +431,102 @@ function makeChart(q) {
       // store width/height of svg canvas
       let canvasWidth = Number((svg.style("width")).slice(0, -2));
       let canvasHeight = Number((svg.style("height")).slice(0, -2));
+      
+      // function filter empty strings and such from csv data
+      function stringFilter(str){
+        return (str != null && str !== " " && str !== "" && Number.isFinite(Number(str)));
+      }
+
+      // get data and attribute name for specific quadrant
+      let scatterData = getFilteredQuadrantData(csvDataSource,q);
+      let chosenField = scatterData[0];
+
+      // initialize min/max x/y values to set up scales
+      let minY = Number(scatterData[1][0][chosenField]);
+      let maxY = Number(scatterData[1][0][chosenField]);
+      let minX = Number(scatterData[1][0]["Year"]);
+      let maxX = Number(scatterData[1][0]["Year"]);
+      
+      // create xy coordinate pairs from scatterData, filtering points without
+      // valid attributes, and push into scatterPoints array
+      // get min/max x/y values as well
+      let scatterPoints = [];
+      for (let i = 0; i < scatterData[1].length; i++) {
+        if (! stringFilter(scatterData[1][i][chosenField]) || 
+            ! stringFilter(scatterData[1][i]["Year"])) {
+              continue;
+        }
+        //console.log(scatterData[1][i]);
+        let xVal = Number(scatterData[1][i]["Year"]);
+        let yVal = Number(scatterData[1][i][chosenField]);
+        let point = [xVal, yVal];
+        scatterPoints.push(point);
+
+        minY = Math.min(minY, yVal);
+        maxY = Math.max(maxY, yVal);
+        minX = Math.min(minX, xVal);
+        maxX = Math.max(maxX, xVal);
+      }
+
+      // variables for chart margin/padding
+      let xMargin = 30 + 4*((""+maxY).length);
+      let yMargin = 40;
+      let padding = 10;
 
       // x,y scales to translate disaster data to svg coordinates
       let xScale = d3.scaleLinear()
-        .domain([0, 1])
-        .range([0, canvasWidth]);
+        .domain([minX, maxX])
+        .range([xMargin, canvasWidth-(padding)]);
       let yScale = d3.scaleLinear()
-        .domain([0, 1])
-        .range([0, canvasHeight]);
+        .domain([minY, maxY])
+        .range([canvasHeight-yMargin, padding]);
+      // flipped y scale for yAxis
+      let yScaleFlipped = d3.scaleLinear()
+        .domain([minY, maxY])
+        .range([padding, canvasHeight-yMargin]);
 
-      // scatterPoints holds points for scatter plot
-      let scatterPoints = [];
+      // color scale
+      let colorScale = d3.scaleLinear()
+        .domain([minY, maxY])
+        .range(["blue", "red"]);
 
-      // loop to create 20 random points
-      for (let i = 0; i < 20; i++) {
-        // set random x,y coordinates
-        let randomPoint = [xScale(Math.random()), yScale(Math.random())];
-        scatterPoints.push(randomPoint);
-      }
+      // create x,y axes
+      let xAxis = d3.axisBottom().scale(xScale).ticks(10)
+        .tickFormat((tick) => String(tick));
+      let yAxis = d3.axisLeft().scale(yScale).ticks(10)
+        .tickFormat((tick) => String(tick));
 
+      //console.log(chosenField);
+      //console.log(filtered);
+      //console.log(minX, maxX, minY, maxY);
+      //console.log(typeof scatterData[1][0])
+
+      // plot points as circles
       svg.selectAll('circle')
         .data(scatterPoints)
         .enter()
         .append('circle')
-        .attr("r", 5)
-        .attr("cx", function(datum) { return datum[0]; })
-        .attr("cy", function(datum) { return datum[1]; })
-        .style("fill", "blue");
+        .attr("r", 4)
+        .attr("cx", function(datum) { return xScale(datum[0]); })
+        .attr("cy", function(datum) { return yScale(datum[1]); })
+        .style('fill', function(datum) { return colorScale(datum[1]); });
 
+      // append x,y axes
+      svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + (canvasHeight-yMargin) + ")")
+        .call(xAxis);
+      svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(" + xMargin + ",0)")
+        .call(yAxis);
+
+      // append x axis label
+      svg.append("text")
+        .attr("text-anchor", "middle")
+        .attr("x", (canvasWidth+xMargin)/2)
+        .attr("y", canvasHeight - 5)
+        .text("Year");
     }
     // else, quadrant q is a chart, so restore map
     else {
@@ -573,6 +642,116 @@ $("#fileForm").on("change", (e) => {
   };
 
   reader.readAsText(f)
+})
+
+//refrash all maps or map i
+// const refreshMaps = (data, field = null, i = null) => {
+//   const refreshMap = (m, mNumber) => {
+//     console.log(mNumber)
+//     console.log( $("#select" + (mNumber + 1)).val())
+//     let selectedField = field || $("#select" + (mNumber + 1)).val()
+//     let features = getFeatures(data, selectedField)
+//     console.log(features)
+//     const mSource = new VectorSource({
+//       features: features,
+//       style: {
+//         'circle-radius': 30,
+//         'circle-fill-color':"red"
+//       }
+//     })
+//     let l = m.getLayers().getArray()[1];
+//     l.setSource(mSource);
+//   }
+
+//   if (!i) {
+//     maps.forEach((m, mNumber) => {
+//       console.log(m, mNumber)
+//       refreshMap(m, mNumber)
+//   })} else {
+//     let m = maps[i - 1];
+//     refreshMap(m)
+//   }
+// }
+
+// function refreshDropdowns(data) {
+//   let dims = Object.entries(data[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
+//   let opts = getUniqueValues(data, "Disaster Type")
+
+//   // for each quadrant
+//   for (let i = 1; i < 5; i++) {
+//     let elementID = "#select" + i
+//     let disasterElementID = "#disaster-select" + i
+//     // add event handler to each menu
+//     d3.select(elementID)
+//     .on("change", function(e) { dropDownChange(e, i); });
+
+//     $(elementID).empty()
+
+//     // Q2/Q3 option specific to last quadrant
+//     if (i == 4) {
+//       d3.select(elementID)
+//       .append("option")
+//       .text("Q2/Q3");
+//     }
+
+//     // add an option for each dim to menu
+//     for (let j = 0; j < dims.length; j++) {
+//       d3.select(elementID)
+//       .append("option")
+//       .text(dims[j]);
+//     }
+
+//     for (let j = 0; j < opts.length; j++) {
+//       d3.select(disasterElementID)
+//       .append("option")
+//       .text(opts[j]);
+//     }
+
+//     // rotate dims
+//     let firstElement = dims.shift();
+//     dims.push(firstElement);
+
+//     //select first option
+//     $(elementID)[0].selectedIndex = 0;
+//     $(disasterElementID)[0].selectedIndex = 0;
+//   }
+// }
+
+
+// function getUniqueValues(data, fieldName) {
+//   let uniqueValues = new Set();
+//   for (let item of data) {
+//     uniqueValues.add(item[fieldName]);
+//   }
+//   return Array.from(uniqueValues);
+// }
+
+
+//todo add tooltip style
+maps.forEach((map, i) => {
+  console.log("x")
+  console.log(map)
+  var tooltip = document.getElementById('tooltip' + i);
+  var overlay = new Overlay({
+    element: tooltip,
+    offset: [10, 0],
+    positioning: 'bottom-left'
+  });
+  map.addOverlay(overlay);
+
+  function displayTooltip(evt) {
+    var pixel = evt.pixel;
+    var feature = map.forEachFeatureAtPixel(pixel, function(feature) {
+      return feature;
+    });
+    tooltip.style.display = feature ? '' : 'none';
+    if (feature) {
+      overlay.setPosition(evt.coordinate);
+      tooltip.innerHTML = JSON.stringify(feature.get('data'), null, 2);
+    }
+  };
+
+  //reader.readAsText(f)
 })
 
 //refrash all maps or map i
