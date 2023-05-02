@@ -914,7 +914,7 @@ function getFilteredQuadrantData(allData, i) {
   let field =  $("#select" + i).val()
   let fields = localData.map((obj) => obj[field])
 
-  return [field, fields]
+  return [field, localData]
 }
 
 
