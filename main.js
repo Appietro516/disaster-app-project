@@ -172,7 +172,11 @@ function createNewVectorLayer(layerFeatures){
 
 function createVectorLayerFromSource(vectorSource){
   return new VectorLayer({
-    source: vectorSource}
+    source: vectorSource,
+    style:{
+      'stroke-color': '#003180',
+      'fill-color': 'rgba(255, 255, 255, 0.6)',
+    }}
     )  
 }
 
@@ -247,7 +251,7 @@ initializeHeatMapQuadrant(earthquakeData)
 
 function initializeCircleRadiiQuadrant(quadrantNum, quadrantData){
   //Let's cycle through the JSON data.  
-  //let projection = map2.getView().getProjection();
+  //let projection = map2.getView().getProjection();z
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
@@ -340,7 +344,18 @@ const heatMapLayer = new HeatmapLayer({
 let maps = [];
 InitializeMaps();
 function InitializeMaps(){
-  let initialLayers = [vectorLayer1, circleMagLayer, heatMapLayer, vectorLayer4];
+  let initialLayers = [];
+  for(let i = 0; i < 4; i++){
+    let vectorSource = new VectorSource({
+      features: features,
+      style: {
+        'circle-radius': 30,
+        'circle-fill-color':"red"
+      }
+    })
+    initialLayers[i] = createVectorLayerFromSource(vectorSource);
+  }
+  //let initialLayers = [vectorLayer1, circleMagLayer, heatMapLayer, vectorLayer4];
   initialLayers.forEach(function(layer, index){
     let map = createNewMap(index+1, layer );
     maps.push(map);
@@ -417,8 +432,14 @@ function makeChart(q) {
       d3.select("#chart"+q)
         .attr('value', "Map");
 
-      // insert svg canvas as first child of map div
+      // select map div
       let sel = d3.select("#map"+q);
+
+      // remove old svg canvas
+      sel.selectAll("svg")
+        .remove();
+
+      // insert svg canvas as first child of map div 
       let svg = sel.insert("svg",":first-child")
             .attr("width", "100%")
             .attr("height", "100%")
@@ -775,7 +796,8 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
         features: features,
         style: {
           'circle-radius': 30,
-          'circle-fill-color':"red"
+          'circle-fill-color':"red",
+          
         }
       })
       m.setLayers([new TileLayer({source: new OSM()}), createVectorLayerFromSource(mSource)])
@@ -807,6 +829,12 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
   })} else {
     let m = maps[i - 1];
     refreshMap(m)
+
+    // updates scatterplot if drawn in quadrant i
+    if (! mapOrChart[i-1]) {
+      mapOrChart[i-1] = true;
+      makeChart(i);
+    }
   }
 }
 
