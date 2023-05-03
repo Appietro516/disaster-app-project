@@ -108,8 +108,17 @@ function getFeatures (
     if (field == 'Q2/Q3') {
       let q2_field = $('#select' + 2).val()
       let q3_field = $('#select' + 3).val()
-      let q2_fieldData = data[q2_field].replace(/[^0-9.]/g, '')
-      let q3_fieldData = data[q3_field].replace(/[^0-9.]/g, '')
+      let q2_fieldData;
+      let q3_fieldData;
+      if (!(data[q2_field] == undefined || data[q3_field] == undefined)) {
+        q2_fieldData = data[q2_field].replace(/[^0-9.]/g, '')
+        q3_fieldData = data[q3_field].replace(/[^0-9.]/g, '')
+      }
+      else {
+        q2_fieldData = 0
+        q3_fieldData = 1
+      }
+
       fieldData = q2_fieldData / q3_fieldData
       if (fieldData == Infinity || fieldData == NaN) {
         fieldData = 0
@@ -122,6 +131,7 @@ function getFeatures (
     let magnitude = Number(fieldData)
     if (isNaN(magnitude)) magnitude = 0
     magnitudes.push(magnitude)
+    
   }
 
   let normalizedMags = []
