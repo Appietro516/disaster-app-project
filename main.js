@@ -96,7 +96,7 @@ const view = new View({
 
 
 function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES, disasterVal){
-  //Let's cycle through the JSON data.  
+  //cycle through the JSON data.  
   //let projection = map2.getView().getProjection();
   let magnitudes = [];
   for(let i = 0; i < quadrantData.length; i++){
@@ -106,8 +106,14 @@ function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES, disa
 
     // // filter data by disaster
     // let disasterElementID = "#disaster-select" + i
-    // let disasterVal = $(disasterElementID).val()
-    // if (data['Disaster Type'] != disasterVal) continue;
+    // console.log(disasterElementID)
+    // console.log($(disasterElementID))
+    // let disasterVal = $(disasterElementID).value || "Earthquake"
+    // console.log(disasterVal);
+    // console.log(data['Disaster Type'])
+    // // debugger
+    console.log(disasterVal);
+    if (data['Disaster Type'] != disasterVal) continue;
 
     let fieldData;
     console.log("HERE")
@@ -823,10 +829,7 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
     // console.log("#disaster-select" + (mNumber))
     
     let selectedField = field || $("#select" + (mNumber + 1)).val()
-    let disaterVal = $("#disaster-select" + (mNumber)).val()
-    // console.log("REFRESHING")
-    // console.log(disaterVal)
-    // debugger;
+    let disaterVal = $("#disaster-select" + (mNumber + 1)).val()
     let features = getFeatures(data, selectedField, visualType, disaterVal)
     console.log(features)
     let mSource = null; 
@@ -872,7 +875,7 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
       refreshMap(m, mNumber)
   })} else {
     let m = maps[i - 1];
-    refreshMap(m)
+    refreshMap(m, i-1)
 
     // updates scatterplot if drawn in quadrant i
     if (! mapOrChart[i-1]) {
@@ -951,8 +954,6 @@ function refreshDropdowns(data) {
 
 //todo add tooltip style
 maps.forEach((map, i) => {
-  //console.log("x")
-  //console.log(map)
   var tooltip = document.getElementById('tooltip' + i);
   var overlay = new Overlay({
     element: tooltip,
@@ -973,7 +974,7 @@ maps.forEach((map, i) => {
     }
   };
 
-
+  //display tooltip here
   map.on('singleclick', displayTooltip);
   $("#tooltip").css("font-size", 12);
 });
@@ -1075,9 +1076,10 @@ $("#toSlider").on("change", (e)=> {
   
 
 
+console.log("HELLO!")
+//iniitilization stuff
 refreshSlider();
+for (let i = 1; i < 5; i++) {
+  refreshMaps(csvData, $("#select" + i).val(), i, visualTypeArray[i-1])
+}
 
-
-// Here is how you call the filtering stuff
-// let data = getFilteredQuadrantData(csvDataSource, 3)
-// console.log(data)
