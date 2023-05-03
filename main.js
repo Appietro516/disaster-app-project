@@ -432,8 +432,14 @@ function makeChart(q) {
       d3.select("#chart"+q)
         .attr('value', "Map");
 
-      // insert svg canvas as first child of map div
+      // select map div
       let sel = d3.select("#map"+q);
+
+      // remove old svg canvas
+      sel.selectAll("svg")
+        .remove();
+
+      // insert svg canvas as first child of map div 
       let svg = sel.insert("svg",":first-child")
             .attr("width", "100%")
             .attr("height", "100%")
@@ -823,6 +829,12 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
   })} else {
     let m = maps[i - 1];
     refreshMap(m)
+
+    // updates scatterplot if drawn in quadrant i
+    if (! mapOrChart[i-1]) {
+      mapOrChart[i-1] = true;
+      makeChart(i);
+    }
   }
 }
 
