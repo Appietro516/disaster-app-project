@@ -125,7 +125,14 @@ function getFeatures (
       }
     } else {
       let selected_field = data.hasOwnProperty(field) ? field : 'Dis Mag Value'
-      fieldData = data[selected_field].replace(/[^0-9.]/g, '')
+
+      if (!(data[selected_field] == undefined)) {
+        fieldData = data[selected_field].replace(/[^0-9.]/g, '')
+      }
+      else {
+        fieldData = 0;
+      }
+
     }
 
     let magnitude = Number(fieldData)
