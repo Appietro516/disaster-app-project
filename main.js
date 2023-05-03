@@ -94,7 +94,8 @@ function getFeatures (
   quadrantData,
   field,
   visualType = VISUAL_TYPE_CIRCLES,
-  disasterVal
+  disasterVal,
+  quadNumber
 ) {
   //cycle through the JSON data.
   //let projection = map2.getView().getProjection();
@@ -126,6 +127,10 @@ function getFeatures (
   let normalizedMags = []
   let maxMag = Math.max(...magnitudes)
   let minMag = Math.min(...magnitudes)
+  console.log("#minVal" + (quadNumber + 1))
+  console.log($("#minVal" + (quadNumber + 1)))
+  $("#minVal" + (quadNumber + 1)).text(minMag)
+  $("#maxVal" + (quadNumber + 1)).text(maxMag)
   magnitudes.forEach(m => {
     let normal = (m - minMag) / (maxMag - minMag)
     normalizedMags.push(normal)
@@ -672,7 +677,7 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
   const refreshMap = (m, mNumber) => {
     let selectedField = field || $('#select' + (mNumber + 1)).val()
     let disaterVal = $('#disaster-select' + (mNumber + 1)).val()
-    let features = getFeatures(data, selectedField, visualType, disaterVal)
+    let features = getFeatures(data, selectedField, visualType, disaterVal, mNumber)
     let mSource = null
     //A vector source for circles
 
