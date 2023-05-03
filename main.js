@@ -128,24 +128,31 @@ function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES, disa
       console.log(q2_fieldData)
       console.log(q3_fieldData)
       fieldData = q2_fieldData / q3_fieldData
+      if (fieldData == Infinity || fieldData == NaN) {
+        fieldData = 0;
+      }
 
       console.log(fieldData)
       console.log("MERE")
+      // debugger;
     } else {
       let selected_field = data.hasOwnProperty(field) ? field : "Dis Mag Value"
       fieldData = data[selected_field].replace(/[^0-9.]/g,'');
     }
 
 
-    
     let magnitude = Number(fieldData);
+    if (isNaN(magnitude)) magnitude = 0;
     magnitudes.push(magnitude)
   }
 
   let normalizedMags = [];
   let maxMag =  Math.max(...magnitudes)
   let minMag = Math.min(...magnitudes)
-  //console.log(normalizedMags)
+  console.log(magnitudes)
+  console.log(maxMag)
+  console.log(minMag)
+  debugger;
   magnitudes.forEach((m) => {
     let normal =  (m - minMag) / (maxMag - minMag)
     normalizedMags.push(normal)
