@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Using OpenLayers with Vite</title>
+    <title>Disaster Data Visulization</title>
     <style>
       /*.wrapper {
         height: 10%;
@@ -146,7 +146,12 @@
       </div>
     </div>
 
+   
     <div class="range_container">
+      <div>
+        <label id="fromSliderLabel" for="fromSlider">1947</label>
+        <label id="toSliderLabel" for="toSlider" style="float:right;margin-bottom:15px;">1952</label>
+      </div>
       <div class="sliders_control">
           <input id="fromSlider" type="range" value="10" min="0" max="100"/>
           <input id="toSlider" type="range" value="40" min="0" max="100"/>

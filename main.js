@@ -95,14 +95,42 @@ const view = new View({
 })
 
 
-function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES){
+function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES, disasterVal){
   //Let's cycle through the JSON data.  
   //let projection = map2.getView().getProjection();
   let magnitudes = [];
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
-    let selected_field = data.hasOwnProperty(field) ? field : "Dis Mag Value"
-    let fieldData = data[selected_field].replace(/[^0-9.]/g,'');
+    console.log("wll")
+    console.log(data)
+
+    // // filter data by disaster
+    // let disasterElementID = "#disaster-select" + i
+    // let disasterVal = $(disasterElementID).val()
+    // if (data['Disaster Type'] != disasterVal) continue;
+
+    let fieldData;
+    console.log("HERE")
+    console.log(field)
+    if (field == "Q2/Q3") {
+      let q2_field = $("#select" + 2).val()
+      let q3_field = $("#select" + 3).val()
+      console.log(q2_field)
+      console.log(q3_field)
+      let q2_fieldData = data[q2_field].replace(/[^0-9.]/g,'');
+      let q3_fieldData = data[q3_field].replace(/[^0-9.]/g,'');
+      console.log(q2_fieldData)
+      console.log(q3_fieldData)
+      fieldData = q2_fieldData / q3_fieldData
+
+      console.log(fieldData)
+      console.log("MERE")
+    } else {
+      let selected_field = data.hasOwnProperty(field) ? field : "Dis Mag Value"
+      fieldData = data[selected_field].replace(/[^0-9.]/g,'');
+    }
+
+
     
     let magnitude = Number(fieldData);
     magnitudes.push(magnitude)
@@ -121,6 +149,10 @@ function getFeatures(quadrantData, field, visualType = VISUAL_TYPE_CIRCLES){
   let features = [];
   for(let i = 0; i < quadrantData.length; i++){
     let data = quadrantData[i];
+    // filter data by disaster
+    disasterVal = disasterVal ? disasterVal : "Earthquake"
+    if (data['Disaster Type'] != disasterVal) continue;
+
     let longitude = Number(data.Longitude.replace(new RegExp("[A-Za-z]", ""), ""));
     let magnitude = normalizedMags[i];
     if(isNaN(longitude)){
@@ -362,11 +394,11 @@ function InitializeMaps(){
   })
 }
 
-const map2 = new Map({
-  target: 'map2',
-  layers: [new TileLayer({source: new OSM()}), vectorLayer2],
-  view: view,
-});
+// const map2 = new Map({
+//   target: 'map2',
+//   layers: [new TileLayer({source: new OSM()}), vectorLayer2],
+//   view: view,
+// });
 function createNewMap(mapIndex, layer){
   let map = new Map({
     target: 'map' + mapIndex,
@@ -376,11 +408,11 @@ function createNewMap(mapIndex, layer){
   return map;
 }
 
-const map3 = new Map({
-  target: 'map3',
-  layers: [new TileLayer({source: new OSM()}), heatMapLayer],
-  view: view,
-});
+// const map3 = new Map({
+//   target: 'map3',
+//   layers: [new TileLayer({source: new OSM()}), heatMapLayer],
+//   view: view,
+// });
 
 
 /**
@@ -595,24 +627,12 @@ for (let i = 1; i < 5; i++) {
   }
 
   // add an option for each dim to menu
-  for (let j = 0; j < dims.length; j++) {
-    d3.select("#select" + i)
-    .append("option")
-    .text(dims[j]);
-  }
-  console.log("FIRING NOW")
-
-  // for (let j = 0; j < opts.length; j++) {
-  //   console.log(opts[j])
-  //   d3.select("#disaster-select" + i)
+  // for (let j = 0; j < dims.length; j++) {
+  //   d3.select("#select" + i)
   //   .append("option")
-  //   .text(opts[j]);
+  //   .text(dims[j]);
   // }
-  for (let j = 0; j < opts.length; j++) {
-    d3.select("#disaster-select" + i)
-    .append("option")
-    .text(opts[j]);
-  }
+  console.log("FIRING NOW")
 
   for(let j = 0; j < visualTypeOptions.length; j++){
     d3.select("#visual-type" + i)
@@ -797,10 +817,17 @@ maps.forEach((map, i) => {
 //refrash all maps or map i
 const refreshMaps = (data, field = null, i = null, visualType) => {
   const refreshMap = (m, mNumber) => {
-    console.log(mNumber)
-    console.log( $("#select" + (mNumber + 1)).val())
+    // console.log(mNumber)
+    // console.log( $("#select" + (mNumber + 1)).val())
+    // console.log($("#disaster-select" + (mNumber + 1)).val())
+    // console.log("#disaster-select" + (mNumber))
+    
     let selectedField = field || $("#select" + (mNumber + 1)).val()
-    let features = getFeatures(data, selectedField, visualType)
+    let disaterVal = $("#disaster-select" + (mNumber)).val()
+    // console.log("REFRESHING")
+    // console.log(disaterVal)
+    // debugger;
+    let features = getFeatures(data, selectedField, visualType, disaterVal)
     console.log(features)
     let mSource = null; 
     //A vector source for circles
@@ -839,6 +866,7 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
   }
 
   if (!i) {
+    console.log("NOT I")
     maps.forEach((m, mNumber) => {
       //console.log(m, mNumber)
       refreshMap(m, mNumber)
@@ -855,7 +883,15 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
 }
 
 function refreshDropdowns(data) {
-  let dims = Object.entries(data[0]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
+  console.log(data[100])
+  // debugger;
+  let dims = new Set()
+  for (let i = 1; i < 200; i++) {
+    let dims2 = Object.entries(data[i]).filter(([_,y]) => y != '' && !isNaN(y)).map(([x,_]) => x)
+    dims2 = dims2.filter((item) => !(item.includes("Month") || item.includes ("Year") || item.includes("Day") || item.includes("Longitude") || item.includes("Latitude")))
+    dims2.forEach((dim) => dims.add(dim))
+  }
+  dims = Array.from(dims)
   let opts = getUniqueValues(data, "Disaster Type")
 
   // for each quadrant
@@ -867,6 +903,11 @@ function refreshDropdowns(data) {
     .on("change", function(e) { dropDownChange(e, i); });
 
     $(elementID).empty()
+
+    d3.select(disasterElementID)
+    .on("change", function(e) { dropDownChange({target: {value: $(elementID).val()}}, i); });
+
+    $(disasterElementID).empty()
 
     // Q2/Q3 option specific to last quadrant
     if (i == 4) {
@@ -1002,6 +1043,8 @@ function refreshSlider() {
   console.log(min)
   $("#fromSlider").val(min)
   $("#toSlider").val(max)
+  $("#fromSliderLabel").text(min)
+  $("#toSliderLabel").text(max)
 }
 
 //TODo generalize a refreshSliderDataMethod
@@ -1014,6 +1057,7 @@ $("#fromSlider").on("change", (e) => {
   for (let i = 1; i < 5; i++) {
     refreshMaps(csvData, $("#select" + i).val(), i)
   }
+  $("#fromSliderLabel").text(e.target.value)
 });
   
 
@@ -1025,6 +1069,7 @@ $("#toSlider").on("change", (e)=> {
   for (let i = 1; i < 5; i++) {
     refreshMaps(csvData, $("#select" + i).val(), i)
   }
+  $("#toSliderLabel").text(e.target.value)
 });
   
 
