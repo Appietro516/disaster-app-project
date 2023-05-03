@@ -4,11 +4,8 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="https://openlayers.org/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Using OpenLayers with Vite</title>
+    <title>Disaster Data Visulization</title>
     <style>
-      /*.wrapper {
-        height: 10%;
-      }*/
       .map {
         width: 100%;
         height: 400px;
@@ -27,7 +24,7 @@
         display: flex;
         flex-direction: column;
         width: 80%;
-        margin: 5% auto;
+        margin: 2% auto;
       }
 
       .sliders_control {
@@ -101,6 +98,21 @@
         height: 0;
         z-index: 1;
       }
+      .tooltip {
+        font-size: 8px;
+        background-color: grey;
+        color: white;
+        font-weight: bold;
+        border-radius: 5px;
+        padding: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        border-color: lightgray;
+        border-style: solid;
+        border-width: thin;
+      }
+      .valDiv {
+        display: inline;
+      }
     </style>
   </head>
 
@@ -120,6 +132,10 @@
         <select id="disaster-select1"></select>
         <select id="visual-type1" value="1"></select>
         <input type="button" id="chart1" value="Chart"> 
+        <div id="min1" class="valDiv">Min: </div>
+        <div id="minVal1" class="valDiv">26 </div>
+        <div id="max1" class="valDiv">Max: </div>
+        <div id="maxVal1" class="valDiv">73 </div>
       </div>
       <div class="half">
         <div id="map2" class="map"></div>
@@ -127,6 +143,10 @@
         <select id="disaster-select2"></select>
         <select id="visual-type2" value="2"></select>
         <input type="button" id="chart2" value="Chart"> 
+        <div id="min2" class="valDiv">Min: </div>
+        <div id="minVal2" class="valDiv">26 </div>
+        <div id="max2" class="valDiv">Max: </div>
+        <div id="maxVal2" class="valDiv">73 </div>
       </div>
     </div>
     <div class="wrapper">
@@ -136,6 +156,10 @@
         <select id="disaster-select3"></select>
         <select id="visual-type3" value="3"></select>
         <input type="button" id="chart3" value="Chart"> 
+        <div id="min3" class="valDiv">Min: </div>
+        <div id="minVal3" class="valDiv">26 </div>
+        <div id="max3" class="valDiv">Max: </div>
+        <div id="maxVal3" class="valDiv">73 </div>
       </div>
       <div class="half">
         <div id="map4" class="map"></div>
@@ -143,24 +167,23 @@
         <select id="disaster-select4"></select>
         <select id="visual-type4" map-value="4"></select>
         <input type="button" id="chart4" value="Chart"> 
+        <div id="min4" class="valDiv">Min: </div>
+        <div id="minVal4" class="valDiv">26 </div>
+        <div id="max4" class="valDiv">Max: </div>
+        <div id="maxVal4" class="valDiv">73 </div>
       </div>
     </div>
 
+   
     <div class="range_container">
+      <div>
+        <label id="fromSliderLabel" for="fromSlider">1947</label>
+        <label id="toSliderLabel" for="toSlider" style="float:right;margin-bottom:15px;">1952</label>
+      </div>
       <div class="sliders_control">
           <input id="fromSlider" type="range" value="10" min="0" max="100"/>
           <input id="toSlider" type="range" value="40" min="0" max="100"/>
       </div>
-      <!-- <div class="form_control">
-          <div class="form_control_container">
-              <div class="form_control_container__time">Min</div>
-              <input class="form_control_container__time__input" type="number" id="fromInput" value="10" min="0" max="100"/>
-          </div>
-          <div class="form_control_container">
-              <div class="form_control_container__time">Max</div>
-              <input class="form_control_container__time__input" type="number" id="toInput" value="40" min="0" max="100"/>
-          </div>
-      </div> -->
   </div>
 
 
@@ -169,8 +192,6 @@
     <script type="module" src="./main.js"></script>
     <form id="fileForm">
       <input type="file" id="csvFile" accept=".csv" />
-      <br />
-      <input type="submit" value="Submit" onclick="readCSVFile();"/>
    </form>
   </body>
 </html>
