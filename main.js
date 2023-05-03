@@ -104,11 +104,10 @@ function getFeatures (
     let data = quadrantData[i]
     if (data['Disaster Type'] != disasterVal) continue
 
-    let fieldData;
+    let fieldData
     if (field == 'Q2/Q3') {
       let q2_field = $('#select' + 2).val()
       let q3_field = $('#select' + 3).val()
-
       let q2_fieldData;
       let q3_fieldData;
       if (!(data[q2_field] == undefined || data[q3_field] == undefined)) {
@@ -119,7 +118,6 @@ function getFeatures (
         q2_fieldData = 0
         q3_fieldData = 1
       }
-
 
       fieldData = q2_fieldData / q3_fieldData
       if (fieldData == Infinity || fieldData == NaN) {
@@ -138,6 +136,7 @@ function getFeatures (
     let magnitude = Number(fieldData)
     if (isNaN(magnitude)) magnitude = 0
     magnitudes.push(magnitude)
+    
   }
 
   let normalizedMags = []
