@@ -29,6 +29,7 @@ const VISUAL_TYPE_CIRCLES = 0;
 const VISUAL_TYPE_HEAT_MAP = 1;
 let visualTypeOptions = [VISUAL_TYPE_CIRCLES, VISUAL_TYPE_HEAT_MAP];
 let visualTypeOptionsNames = ["Circles", "Heat Map"];
+let visualTypeArray = [VISUAL_TYPE_CIRCLES, VISUAL_TYPE_CIRCLES, VISUAL_TYPE_CIRCLES,VISUAL_TYPE_CIRCLES];
 
 let csvData  = emdat_data;
 let csvDataSource = emdat_data; //todo propagate
@@ -418,6 +419,11 @@ function makeChart(q) {
 
       // insert svg canvas as first child of map div
       let sel = d3.select("#map"+q);
+
+      // remove old svg canvas
+      sel.selectAll("svg")
+        .remove();
+
       let svg = sel.insert("svg",":first-child")
             .attr("width", "100%")
             .attr("height", "100%")
@@ -495,11 +501,6 @@ function makeChart(q) {
         .tickFormat((tick) => String(tick));
       let yAxis = d3.axisLeft().scale(yScale).ticks(10)
         .tickFormat((tick) => String(tick));
-
-      //console.log(chosenField);
-      //console.log(filtered);
-      //console.log(minX, maxX, minY, maxY);
-      //console.log(typeof scatterData[1][0])
 
       // plot points as circles
       svg.selectAll('circle')
@@ -586,10 +587,6 @@ for (let i = 1; i < 5; i++) {
     .text(function(d){return d} )
     
   }
-    
-
-  
-  
 
   // add click handler to chart-or-map buttons
   d3.select("#chart" + i)
@@ -601,7 +598,10 @@ for (let i = 1; i < 5; i++) {
 }
 
 function onVisChange(event){
-  refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),Number( event.target.value) -1 , event.target.selectedIndex);
+  let quadrantNumber = Number(event.target.id.charAt(event.target.id.length-1));
+  visualTypeArray[quadrantNumber-1] = event.target.selectedIndex;
+  refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),quadrantNumber , event.target.selectedIndex);
+
  // refreshMaps(csvData, e.target.value, i)
 }
 
@@ -621,7 +621,7 @@ function onVisChange(event){
 //drop down change handler
 
 let dropDownChange = (e, i) => {  
-  refreshMaps(csvData, e.target.value, i)
+  refreshMaps(csvData, e.target.value, i, visualTypeArray[i-1])
 }
 
 // File upload handler 
@@ -755,7 +755,7 @@ maps.forEach((map, i) => {
 })
 
 //refrash all maps or map i
-const refreshMaps = (data, field = null, i = null, visualType = VISUAL_TYPE_CIRCLES) => {
+const refreshMaps = (data, field = null, i = null, visualType) => {
   const refreshMap = (m, mNumber) => {
     console.log(mNumber)
     console.log( $("#select" + (mNumber + 1)).val())
@@ -804,6 +804,13 @@ const refreshMaps = (data, field = null, i = null, visualType = VISUAL_TYPE_CIRC
   })} else {
     let m = maps[i - 1];
     refreshMap(m)
+
+    // updates scatterplot if drawn in quadrant i
+    if (! mapOrChart[i-1]) {
+      mapOrChart[i-1] = true;
+      makeChart(i);
+    }
+
   }
 }
 
