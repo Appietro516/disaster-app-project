@@ -417,13 +417,14 @@ function makeChart(q) {
       d3.select("#chart"+q)
         .attr('value', "Map");
 
-      // insert svg canvas as first child of map div
+      // select map div
       let sel = d3.select("#map"+q);
 
       // remove old svg canvas
       sel.selectAll("svg")
         .remove();
 
+      // insert svg canvas as first child of map div 
       let svg = sel.insert("svg",":first-child")
             .attr("width", "100%")
             .attr("height", "100%")
@@ -501,6 +502,11 @@ function makeChart(q) {
         .tickFormat((tick) => String(tick));
       let yAxis = d3.axisLeft().scale(yScale).ticks(10)
         .tickFormat((tick) => String(tick));
+
+      //console.log(chosenField);
+      //console.log(filtered);
+      //console.log(minX, maxX, minY, maxY);
+      //console.log(typeof scatterData[1][0])
 
       // plot points as circles
       svg.selectAll('circle')
@@ -587,6 +593,10 @@ for (let i = 1; i < 5; i++) {
     .text(function(d){return d} )
     
   }
+    
+
+  
+  
 
   // add click handler to chart-or-map buttons
   d3.select("#chart" + i)
@@ -601,7 +611,6 @@ function onVisChange(event){
   let quadrantNumber = Number(event.target.id.charAt(event.target.id.length-1));
   visualTypeArray[quadrantNumber-1] = event.target.selectedIndex;
   refreshMaps(csvData,$("#visual-type" + (event.target.value + 1)).val(),quadrantNumber , event.target.selectedIndex);
-
  // refreshMaps(csvData, e.target.value, i)
 }
 
@@ -810,7 +819,6 @@ const refreshMaps = (data, field = null, i = null, visualType) => {
       mapOrChart[i-1] = true;
       makeChart(i);
     }
-
   }
 }
 
