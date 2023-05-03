@@ -1053,9 +1053,10 @@ $("#fromSlider").on("change", (e) => {
     return parseInt(obj['Year']) >= e.target.value
   
   })
+  console.log(csvData);
   //todo make refresh all maps
   for (let i = 1; i < 5; i++) {
-    refreshMaps(csvData, $("#select" + i).val(), i)
+    refreshMaps(csvData, $("#select" + i).val(), i, visualTypeArray[i-1])
   }
   $("#fromSliderLabel").text(e.target.value)
 });
@@ -1067,7 +1068,7 @@ $("#toSlider").on("change", (e)=> {
     return parseInt(obj['Year']) <= e.target.value
   })
   for (let i = 1; i < 5; i++) {
-    refreshMaps(csvData, $("#select" + i).val(), i)
+    refreshMaps(csvData, $("#select" + i).val(), i, visualTypeArray[i-1])
   }
   $("#toSliderLabel").text(e.target.value)
 });
