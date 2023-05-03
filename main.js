@@ -970,7 +970,9 @@ maps.forEach((map, i) => {
     tooltip.style.display = feature ? '' : 'none';
     if (feature) {
       overlay.setPosition(evt.coordinate);
-      tooltip.innerHTML = JSON.stringify(feature.get('data'), null, 2);
+      let [c1, c2] = splitObjectInHalf(clean(feature.get('data')));
+      const tooltipContent = "<div style='white-space: nowrap'><pre style='display: inline-block; margin: 0; padding: 0; vertical-align: top; line-height: 1em;'>"+JSON.stringify(c1, null, 2).replace(/[{}]/g, '')+"</pre><pre style='display: inline-block; margin: 0; padding: 0; vertical-align: top; line-height: 1em;'>"+JSON.stringify(c2, null, 2).replace(/[{}]/g, '')+"</pre></div>";
+      tooltip.innerHTML = tooltipContent
     }
   };
 
@@ -978,6 +980,25 @@ maps.forEach((map, i) => {
   map.on('singleclick', displayTooltip);
   $("#tooltip").css("font-size", 12);
 });
+
+function clean(obj) {
+  for (var propName in obj) {
+    if (obj[propName] === null || obj[propName] === undefined || obj[propName] === '') {
+      delete obj[propName];
+    }
+  }
+  return obj
+}
+
+function splitObjectInHalf(obj) {
+  const entries = Object.entries(obj);
+  const halfLength = Math.ceil(entries.length / 2);
+  const firstHalf = entries.slice(0, halfLength);
+  const secondHalf = entries.slice(halfLength);
+  const firstObj = Object.fromEntries(firstHalf);
+  const secondObj = Object.fromEntries(secondHalf);
+  return [firstObj, secondObj];
+}
 
 function getFilteredQuadrantData(allData, i) {
   //filter allData by years
